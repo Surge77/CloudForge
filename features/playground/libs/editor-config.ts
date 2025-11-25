@@ -309,7 +309,7 @@ export const defaultEditorOptions = {
   // Selection
   multiCursorModifier: "ctrlCmd" as const,
   selectionHighlight: true,
-  occurrencesHighlight: true,
+  occurrencesHighlight: "singleFile" as const,
   
   // Suggestions
   suggestOnTriggerCharacters: true,
