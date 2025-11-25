@@ -8,7 +8,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const playgroundData = await getAllPlaygroundForUser()
+  const playgroundData = await getAllPlaygroundForUser() || []
 
   // Store icon names (strings) instead of the components themselves
   const technologyIconMap: Record<string, string> = {
