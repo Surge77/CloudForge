@@ -13,12 +13,12 @@ import { signIn } from "@/auth";
 
 async function handleGoogleSignIn(){
 "use server"
-await signIn("google")
+await signIn("google", { redirectTo: "/dashboard" })
 }
 
 async function handleGithubSignIn(){
 "use server"
-await signIn("github")
+await signIn("github", { redirectTo: "/dashboard" })
 }
 
 const SignInFormClient = () => {
