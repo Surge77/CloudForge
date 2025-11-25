@@ -346,7 +346,7 @@ export const defaultEditorOptions = {
   
   // Cursor
   cursorBlinking: "smooth" as const,
-  cursorSmoothCaretAnimation: true,
+  cursorSmoothCaretAnimation: "on" as const,
   cursorStyle: "line" as const,
   cursorWidth: 2,
   
