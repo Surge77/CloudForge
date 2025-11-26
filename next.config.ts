@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   images: {
@@ -10,6 +11,11 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  // Include Prisma Query Engine in serverless functions
+  outputFileTracingIncludes: {
+    '/api/**/*': ['./node_modules/.prisma/**/*'],
+    '/auth/**/*': ['./node_modules/.prisma/**/*'],
   },
   async headers() {
     return [
