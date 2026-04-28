@@ -1,10 +1,8 @@
-interface TemplateItem {
-  filename: string;
-  fileExtension: string;
-  content: string;
-  folderName?: string;
-  items?: TemplateItem[];
-}
+import type {
+  TemplateFile,
+  TemplateFolder,
+  TemplateItem,
+} from "@/features/playground/libs/path-to-json";
 
 interface WebContainerFile {
   file: {
@@ -18,42 +16,57 @@ interface WebContainerDirectory {
   };
 }
 
-type WebContainerFileSystem = Record<string, WebContainerFile | WebContainerDirectory>;
+type WebContainerFileSystem = Record<
+  string,
+  WebContainerFile | WebContainerDirectory
+>;
 
-export function transformToWebContainerFormat(template: { folderName: string; items: TemplateItem[] }): WebContainerFileSystem {
-  function processItem(item: TemplateItem): WebContainerFile | WebContainerDirectory {
-    if (item.folderName && item.items) {
-      // This is a directory
-      const directoryContents: WebContainerFileSystem = {};
-      
-      item.items.forEach(subItem => {
-        const key = subItem.fileExtension 
-          ? `${subItem.filename}.${subItem.fileExtension}`
-          : subItem.folderName!;
-        directoryContents[key] = processItem(subItem);
-      });
+const isFolder = (item: TemplateItem): item is TemplateFolder => {
+  return "folderName" in item;
+};
 
-      return {
-        directory: directoryContents
-      };
-    } else {
-      // This is a file
-      return {
-        file: {
-          contents: item.content
-        }
-      };
-    }
+const getItemName = (item: TemplateItem): string => {
+  if (isFolder(item)) {
+    return item.folderName;
+  }
+
+  return item.fileExtension
+    ? `${item.filename}.${item.fileExtension}`
+    : item.filename;
+};
+
+export function transformToWebContainerFormat(
+  template: TemplateFolder
+): WebContainerFileSystem {
+  function processFile(item: TemplateFile): WebContainerFile {
+    return {
+      file: {
+        contents: item.content,
+      },
+    };
+  }
+
+  function processFolder(item: TemplateFolder): WebContainerDirectory {
+    const directory: WebContainerFileSystem = {};
+
+    item.items.forEach((subItem) => {
+      directory[getItemName(subItem)] = processItem(subItem);
+    });
+
+    return { directory };
+  }
+
+  function processItem(
+    item: TemplateItem
+  ): WebContainerFile | WebContainerDirectory {
+    return isFolder(item) ? processFolder(item) : processFile(item);
   }
 
   const result: WebContainerFileSystem = {};
-  
-  template.items.forEach(item => {
-    const key = item.fileExtension 
-      ? `${item.filename}.${item.fileExtension}`
-      : item.folderName!;
-    result[key] = processItem(item);
+
+  template.items.forEach((item) => {
+    result[getItemName(item)] = processItem(item);
   });
 
   return result;
-}1
+}

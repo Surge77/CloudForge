@@ -5,7 +5,11 @@ import { useState, useCallback } from "react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { TemplateFileTree } from "@/features/playground/components/playground-explorer";
-import type { TemplateFile } from "@/features/playground/libs/path-to-json";
+import type {
+  TemplateFile,
+  TemplateFolder,
+  TemplateItem,
+} from "@/features/playground/libs/path-to-json";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -45,8 +49,6 @@ import { useFileExplorer } from "@/features/playground/hooks/useFileExplorer";
 import { usePlayground } from "@/features/playground/hooks/usePlayground";
 import { useAISuggestions } from "@/features/playground/hooks/useAISuggestion";
 import { useWebContainer } from "@/features/webcontainers/hooks/useWebContainer";
-import { SaveUpdatedCode } from "@/features/playground/actions";
-import { TemplateFolder } from "@/features/playground/types";
 import { findFilePath } from "@/features/playground/libs";
 import { ConfirmationDialog } from "@/features/playground/components/dialogs/conformation-dialog";
 
@@ -73,7 +75,6 @@ const MainPlaygroundPage: React.FC = () => {
     closeAllFiles,
     openFile,
     closeFile,
-    editorContent,
     updateFileContent,
     handleAddFile,
     handleAddFolder,
@@ -89,13 +90,11 @@ const MainPlaygroundPage: React.FC = () => {
   } = useFileExplorer();
 
   const {
-    serverUrl,
     isLoading: containerLoading,
     error: containerError,
     instance,
     writeFileSync,
-    // @ts-ignore
-  } = useWebContainer({ templateData });
+  } = useWebContainer();
 
   const lastSyncedContent = useRef<Map<string, string>>(new Map());
 
@@ -209,11 +208,13 @@ const MainPlaygroundPage: React.FC = () => {
         const updatedTemplateData = JSON.parse(
           JSON.stringify(latestTemplateData)
         );
-        const updateFileContent = (items: any[]): any[] =>
+        const updateFileContent = (items: TemplateItem[]): TemplateItem[] =>
           items.map((item) => {
             if ("folderName" in item) {
               return { ...item, items: updateFileContent(item.items) };
-            } else if (
+            }
+
+            if (
               item.filename === fileToSave.filename &&
               item.fileExtension === fileToSave.fileExtension
             ) {
@@ -284,7 +285,7 @@ const MainPlaygroundPage: React.FC = () => {
     try {
       await Promise.all(unsavedFiles.map((f) => handleSave(f.id)));
       toast.success(`Saved ${unsavedFiles.length} file(s)`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to save some files");
     }
   };
@@ -382,7 +383,7 @@ const MainPlaygroundPage: React.FC = () => {
             <div className="flex flex-1 items-center gap-2">
               <div className="flex flex-col flex-1">
                 <h1 className="text-sm font-medium">
-                  {playgroundData?.name || "Code Playground"}
+                  {playgroundData?.title || "Code Playground"}
                 </h1>
                 <p className="text-xs text-muted-foreground">
                   {openFiles.length} file(s) open
@@ -516,9 +517,6 @@ const MainPlaygroundPage: React.FC = () => {
                         suggestion={aiSuggestions.suggestion}
                         suggestionLoading={aiSuggestions.isLoading}
                         suggestionPosition={aiSuggestions.position}
-                        onAcceptSuggestion={(editor, monaco) =>
-                          aiSuggestions.acceptSuggestion(editor, monaco)
-                        }
                         onRejectSuggestion={(editor) =>
                           aiSuggestions.rejectSuggestion(editor)
                         }
@@ -534,11 +532,10 @@ const MainPlaygroundPage: React.FC = () => {
                         <ResizablePanel defaultSize={50}>
                           <WebContainerPreview
                             templateData={templateData}
+                            template={playgroundData?.template || "REACT"}
                             instance={instance}
-                            writeFileSync={writeFileSync}
                             isLoading={containerLoading}
                             error={containerError}
-                            serverUrl={serverUrl!}
                             forceResetup={false}
                           />
                         </ResizablePanel>

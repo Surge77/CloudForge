@@ -1,15 +1,5 @@
 import Link from "next/link";
 import { Github as LucideGithub } from "lucide-react";
-import Image from "next/image";
-
-interface ProjectLink {
-  href: string | null;
-  text: string;
-  description: string;
-  icon: string;
-  iconDark?: string;
-  isNew?: boolean;
-}
 
 export function Footer() {
   const socialLinks = [
@@ -40,7 +30,7 @@ export function Footer() {
 
         {/* Copyright Notice */}
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          &copy; {new Date().getFullYear()} Codesnippet. All rights reserved.
+          &copy; {new Date().getFullYear()} CloudForge. All rights reserved.
         </p>
       </div>
     </footer>

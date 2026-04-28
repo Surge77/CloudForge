@@ -1,5 +1,8 @@
 import { WebContainer } from '@webcontainer/api';
 
+type WebContainerFileSystem = Parameters<WebContainer['mount']>[0];
+type WebContainerProcess = Awaited<ReturnType<WebContainer['spawn']>>;
+
 // Singleton class to manage WebContainer instance
 class WebContainerService {
   private static instance: WebContainerService | null = null;
@@ -45,7 +48,7 @@ class WebContainerService {
     }
   }
 
-  public async mountFiles(files: Record<string, any>): Promise<void> {
+  public async mountFiles(files: WebContainerFileSystem): Promise<void> {
     const instance = await this.getWebContainer();
     
     if (!this.mountPromise) {
@@ -55,7 +58,7 @@ class WebContainerService {
     return this.mountPromise;
   }
 
-  public async spawn(command: string, args: string[] = []): Promise<any> {
+  public async spawn(command: string, args: string[] = []): Promise<WebContainerProcess> {
     const instance = await this.getWebContainer();
     return instance.spawn(command, args);
   }

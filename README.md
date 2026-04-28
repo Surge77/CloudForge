@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="public/readme/hero-banner.png" alt="VibeCode Editor Hero Banner" width="100%" />
+  <img src="public/readme/hero-banner.png" alt="CloudForge Hero Banner" width="100%" />
 </p>
 
-<h1 align="center">🚀 VibeCode Editor</h1>
+<h1 align="center">🚀 CloudForge</h1>
 
 <p align="center">
   <strong>A powerful, cloud-based code editor with AI-powered intelligence, live preview, and WebContainer runtime.</strong>
@@ -16,11 +16,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Surge77/code-editor/stargazers">
-    <img src="https://img.shields.io/github/stars/Surge77/code-editor?style=social" alt="GitHub stars"/>
+  <a href="https://github.com/Surge77/cloudforge/stargazers">
+    <img src="https://img.shields.io/github/stars/Surge77/cloudforge?style=social" alt="GitHub stars"/>
   </a>
-  <a href="https://github.com/Surge77/code-editor/network/members">
-    <img src="https://img.shields.io/github/forks/Surge77/code-editor?style=social" alt="GitHub forks"/>
+  <a href="https://github.com/Surge77/cloudforge/network/members">
+    <img src="https://img.shields.io/github/forks/Surge77/cloudforge?style=social" alt="GitHub forks"/>
   </a>
 </p>
 
@@ -102,7 +102,7 @@
 ## 🎯 Demo
 
 <p align="center">
-  <img src="public/readme/feature-webcontainer.png" alt="VibeCode Editor Demo" width="90%" />
+  <img src="public/readme/feature-webcontainer.png" alt="CloudForge Demo" width="90%" />
 </p>
 
 ### Live Features Showcase
@@ -194,8 +194,8 @@ Before you begin, ensure you have the following installed:
 1️⃣ **Clone the repository**
 
 ```bash
-git clone https://github.com/Surge77/code-editor.git
-cd code-editor
+git clone https://github.com/Surge77/cloudforge.git
+cd cloudforge
 ```
 
 2️⃣ **Install dependencies**
@@ -214,7 +214,7 @@ Create a `.env.local` file in the root directory:
 
 ```env
 # Database
-DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/vibecode?retryWrites=true&w=majority"
+DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/cloudforge?retryWrites=true&w=majority"
 
 # NextAuth.js
 AUTH_SECRET="your-super-secret-key-generate-with-openssl-rand-base64-32"
@@ -224,7 +224,9 @@ AUTH_GITHUB_ID="your-github-oauth-app-client-id"
 AUTH_GITHUB_SECRET="your-github-oauth-app-client-secret"
 
 # Optional: AI Service (Ollama)
-OLLAMA_URL="http://localhost:11434"
+OLLAMA_BASE_URL="http://localhost:11434"
+OLLAMA_MODEL="codellama:latest"
+AI_REQUEST_TIMEOUT_MS="30000"
 ```
 
 4️⃣ **Set up the database**
@@ -252,7 +254,7 @@ Navigate to [http://localhost:3000](http://localhost:3000) 🎉
 ## 📁 Project Structure
 
 ```
-code-editor/
+cloudforge/
 ├── 📂 app/                          # Next.js App Router
 │   ├── 📂 (auth)/                   # Authentication routes
 │   │   └── auth/sign-in/           # Sign-in page
@@ -346,7 +348,7 @@ code-editor/
    - Go to [GitHub Developer Settings](https://github.com/settings/developers)
    - Click "New OAuth App"
    - Fill in the details:
-     - **Application name**: VibeCode Editor
+     - **Application name**: CloudForge
      - **Homepage URL**: `http://localhost:3000`
      - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
 
@@ -626,7 +628,7 @@ enum Templates {
 # ═══════════════════════════════════════════════════════════
 #                    DATABASE CONFIGURATION
 # ═══════════════════════════════════════════════════════════
-DATABASE_URL="mongodb+srv://user:pass@cluster.mongodb.net/vibecode"
+DATABASE_URL="mongodb+srv://user:pass@cluster.mongodb.net/cloudforge"
 
 # ═══════════════════════════════════════════════════════════
 #                    AUTHENTICATION
@@ -638,8 +640,9 @@ AUTH_GITHUB_SECRET="github-oauth-client-secret"
 # ═══════════════════════════════════════════════════════════
 #                    AI CONFIGURATION (Optional)
 # ═══════════════════════════════════════════════════════════
-OLLAMA_URL="http://localhost:11434"
-AI_MODEL="codellama:latest"
+OLLAMA_BASE_URL="http://localhost:11434"
+OLLAMA_MODEL="codellama:latest"
+AI_REQUEST_TIMEOUT_MS="30000"
 
 # ═══════════════════════════════════════════════════════════
 #                    DEPLOYMENT (Production)
@@ -737,7 +740,7 @@ curl -X POST http://localhost:3000/api/code-suggestion \
 
 ### Component Library
 
-VibeCode uses **shadcn/ui** with **Radix UI** primitives. Available components:
+CloudForge uses **shadcn/ui** with **Radix UI** primitives. Available components:
 
 <details>
 <summary>📋 View all 56 components</summary>
@@ -899,8 +902,8 @@ CMD ["npm", "start"]
 
 ```bash
 # Build and run
-docker build -t vibecode-editor .
-docker run -p 3000:3000 --env-file .env vibecode-editor
+docker build -t cloudforge .
+docker run -p 3000:3000 --env-file .env cloudforge
 ```
 
 ### Production Checklist
@@ -980,9 +983,9 @@ copies or substantial portions of the Software.
 </p>
 
 <p align="center">
-  <a href="https://github.com/Surge77/code-editor">⭐ Star this repo</a> •
-  <a href="https://github.com/Surge77/code-editor/issues">🐛 Report Bug</a> •
-  <a href="https://github.com/Surge77/code-editor/issues">💡 Request Feature</a>
+  <a href="https://github.com/Surge77/cloudforge">⭐ Star this repo</a> •
+  <a href="https://github.com/Surge77/cloudforge/issues">🐛 Report Bug</a> •
+  <a href="https://github.com/Surge77/cloudforge/issues">💡 Request Feature</a>
 </p>
 
 <p align="center">

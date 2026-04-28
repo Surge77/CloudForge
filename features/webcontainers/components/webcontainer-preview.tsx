@@ -5,36 +5,29 @@ import type { TemplateFolder } from "@/features/playground/libs/path-to-json";
 import { transformToWebContainerFormat } from "../hooks/transformer";
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import TerminalComponent from "./terminal";
+import TerminalComponent, { type TerminalRef } from "./terminal";
 import { WebContainer } from "@webcontainer/api";
+import type { Templates } from "@prisma/client";
+import { templateConfig } from "@/lib/template";
 
 interface WebContainerPreviewProps {
   templateData: TemplateFolder;
-  serverUrl: string;
+  template: Templates;
   isLoading: boolean;
   error: string | null;
   instance: WebContainer | null;
-  writeFileSync: (path: string, content: string) => Promise<void>;
   forceResetup?: boolean; // Optional prop to force re-setup
 }
 
 const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
   templateData,
+  template,
   error,
   instance,
   isLoading,
-  serverUrl,
-  writeFileSync,
   forceResetup = false,
 }) => {
   const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [loadingState, setLoadingState] = useState({
-    transforming: false,
-    mounting: false,
-    installing: false,
-    starting: false,
-    ready: false,
-  });
   const [currentStep, setCurrentStep] = useState(0);
   const totalSteps = 4;
   const [setupError, setSetupError] = useState<string | null>(null);
@@ -42,7 +35,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
   const [isSetupInProgress, setIsSetupInProgress] = useState(false);
   
   // Ref to access terminal methods
-  const terminalRef = useRef<any>(null);
+  const terminalRef = useRef<TerminalRef>(null);
 
   // Reset setup state when forceResetup changes
   useEffect(() => {
@@ -51,13 +44,6 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
       setIsSetupInProgress(false);
       setPreviewUrl("");
       setCurrentStep(0);
-      setLoadingState({
-        transforming: false,
-        mounting: false,
-        installing: false,
-        starting: false,
-        ready: false,
-      });
     }
   }, [forceResetup]);
 
@@ -69,6 +55,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
       try {
         setIsSetupInProgress(true);
         setSetupError(null);
+        const runtimeConfig = templateConfig[template];
         
         // Check if server is already running by testing if files are already mounted
         try {
@@ -81,71 +68,53 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
             
             // Check if server is already running
             instance.on("server-ready", (port: number, url: string) => {
-              console.log(`Reconnected to server on port ${port} at ${url}`);
               if (terminalRef.current?.writeToTerminal) {
-                terminalRef.current.writeToTerminal(`🌐 Reconnected to server at ${url}\r\n`);
+                terminalRef.current.writeToTerminal(`Reconnected to server at ${url}\r\n`);
               }
               setPreviewUrl(url);
-              setLoadingState((prev) => ({
-                ...prev,
-                starting: false,
-                ready: true,
-              }));
               setIsSetupComplete(true);
               setIsSetupInProgress(false);
             });
             
             setCurrentStep(4);
-            setLoadingState((prev) => ({ ...prev, starting: true }));
             return;
           }
-        } catch (e) {
+        } catch {
           // Files don't exist, proceed with normal setup
         }
         
         // Step 1: Transform data
-        setLoadingState((prev) => ({ ...prev, transforming: true }));
         setCurrentStep(1);
         
         // Write to terminal
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("🔄 Transforming template data...\r\n");
+          terminalRef.current.writeToTerminal("Transforming template data...\r\n");
         }
 
-        // @ts-ignore
         const files = transformToWebContainerFormat(templateData);
 
-        setLoadingState((prev) => ({
-          ...prev,
-          transforming: false,
-          mounting: true,
-        }));
         setCurrentStep(2);
 
         // Step 2: Mount files
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("📁 Mounting files to WebContainer...\r\n");
+          terminalRef.current.writeToTerminal("Mounting files to WebContainer...\r\n");
         }
         
         await instance.mount(files);
         
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("✅ Files mounted successfully\r\n");
+          terminalRef.current.writeToTerminal("Files mounted successfully\r\n");
         }
 
-        setLoadingState((prev) => ({
-          ...prev,
-          mounting: false,
-          installing: true,
-        }));
         setCurrentStep(3);
 
         // Step 3: Install dependencies
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("📦 Installing dependencies...\r\n");
+          terminalRef.current.writeToTerminal("Installing dependencies...\r\n");
         }
         
-        const installProcess = await instance.spawn("npm", ["install"]);
+        const [installCommand, ...installArgs] = runtimeConfig.installCommand;
+        const installProcess = await instance.spawn(installCommand, installArgs);
 
         // Stream install output to terminal
         installProcess.output.pipeTo(
@@ -166,35 +135,25 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
         }
 
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("✅ Dependencies installed successfully\r\n");
+          terminalRef.current.writeToTerminal("Dependencies installed successfully\r\n");
         }
 
-        setLoadingState((prev) => ({
-          ...prev,
-          installing: false,
-          starting: true,
-        }));
         setCurrentStep(4);
 
         // Step 4: Start the server
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal("🚀 Starting development server...\r\n");
+          terminalRef.current.writeToTerminal("Starting development server...\r\n");
         }
         
-        const startProcess = await instance.spawn("npm", ["run", "start"]);
+        const [startCommand, ...startArgs] = runtimeConfig.startCommand;
+        const startProcess = await instance.spawn(startCommand, startArgs);
 
         // Listen for server ready event
         instance.on("server-ready", (port: number, url: string) => {
-          console.log(`Server ready on port ${port} at ${url}`);
           if (terminalRef.current?.writeToTerminal) {
-            terminalRef.current.writeToTerminal(`🌐 Server ready at ${url}\r\n`);
+            terminalRef.current.writeToTerminal(`Server ready on port ${port}: ${url}\r\n`);
           }
           setPreviewUrl(url);
-          setLoadingState((prev) => ({
-            ...prev,
-            starting: false,
-            ready: true,
-          }));
           setIsSetupComplete(true);
           setIsSetupInProgress(false);
         });
@@ -220,18 +179,11 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
         
         setSetupError(errorMessage);
         setIsSetupInProgress(false);
-        setLoadingState({
-          transforming: false,
-          mounting: false,
-          installing: false,
-          starting: false,
-          ready: false,
-        });
       }
     }
 
     setupContainer();
-  }, [instance, templateData, isSetupComplete, isSetupInProgress]);
+  }, [instance, template, templateData, isSetupComplete, isSetupInProgress]);
 
   // Cleanup function to prevent memory leaks
   useEffect(() => {

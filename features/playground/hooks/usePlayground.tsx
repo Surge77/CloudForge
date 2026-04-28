@@ -3,11 +3,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { getPlaygroundById, SaveUpdatedCode } from '@/features/playground/actions';
 import type { TemplateFolder } from '@/features/playground/libs/path-to-json';
+import type { Templates } from '@prisma/client';
 
 interface PlaygroundData {
   id: string;
-  name?: string;
-  [key: string]: any;
+  title: string;
+  description: string | null;
+  template: Templates;
+  templateFiles: { content: unknown }[];
 }
 
 interface UsePlaygroundReturn {
@@ -18,6 +21,16 @@ interface UsePlaygroundReturn {
   loadPlayground: () => Promise<void>;
   saveTemplateData: (data: TemplateFolder) => Promise<void>;
 }
+
+const isTemplateFolder = (value: unknown): value is TemplateFolder => {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "folderName" in value &&
+    "items" in value &&
+    Array.isArray((value as TemplateFolder).items)
+  );
+};
 
 export const usePlayground = (id: string): UsePlaygroundReturn => {
   const [playgroundData, setPlaygroundData] = useState<PlaygroundData | null>(null);
@@ -33,13 +46,23 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
       setError(null);
 
       const data = await getPlaygroundById(id);
-    //   @ts-ignore
+      if (!data) {
+        throw new Error("Playground not found");
+      }
       setPlaygroundData(data);
 
       const rawContent = data?.templateFiles?.[0]?.content;
       if (typeof rawContent === "string") {
         const parsedContent = JSON.parse(rawContent);
-        setTemplateData(parsedContent);
+        if (isTemplateFolder(parsedContent)) {
+          setTemplateData(parsedContent);
+          toast.success("Playground loaded successfully");
+          return;
+        }
+      }
+
+      if (isTemplateFolder(rawContent)) {
+        setTemplateData(rawContent);
         toast.success("Playground loaded successfully");
         return;
       }
@@ -73,7 +96,10 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
 
   const saveTemplateData = useCallback(async (data: TemplateFolder) => {
     try {
-      await SaveUpdatedCode(id, data);
+      const result = await SaveUpdatedCode(id, data);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save changes");
+      }
       setTemplateData(data);
       toast.success("Changes saved successfully");
     } catch (error) {

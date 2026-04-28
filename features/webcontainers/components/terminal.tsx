@@ -10,12 +10,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Copy, Trash2, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { WebContainer } from "@webcontainer/api";
 
 interface TerminalProps {
-  webcontainerUrl?: string;
   className?: string;
   theme?: "dark" | "light";
-  webContainerInstance?: any;
+  webContainerInstance?: WebContainer | null;
+}
+
+interface TerminalProcess {
+  output: ReadableStream<string>;
+  exit: Promise<number>;
+  kill: () => void;
 }
 
 // Define the methods that will be exposed through the ref
@@ -25,8 +31,7 @@ export interface TerminalRef {
   focusTerminal: () => void;
 }
 
-const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ 
-  webcontainerUrl, 
+const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
   className,
   theme = "dark",
   webContainerInstance
@@ -35,19 +40,20 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
   const term = useRef<Terminal | null>(null);
   const fitAddon = useRef<FitAddon | null>(null);
   const searchAddon = useRef<SearchAddon | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const connectionMessageWritten = useRef(false);
+  const isConnected = Boolean(webContainerInstance);
   
   // Command line state
   const currentLine = useRef<string>("");
   const cursorPosition = useRef<number>(0);
   const commandHistory = useRef<string[]>([]);
   const historyIndex = useRef<number>(-1);
-  const currentProcess = useRef<any>(null);
-  const shellProcess = useRef<any>(null);
+  const currentProcess = useRef<TerminalProcess | null>(null);
+  const shellProcess = useRef<TerminalProcess | null>(null);
 
-  const terminalThemes = {
+  const terminalThemes = React.useMemo(() => ({
     dark: {
       background: "#09090B",
       foreground: "#FAFAFA",
@@ -94,7 +100,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
       brightCyan: "#06B6D4",
       brightWhite: "#FAFAFA",
     },
-  };
+  }), []);
 
   const writePrompt = useCallback(() => {
     if (term.current) {
@@ -103,6 +109,14 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
       cursorPosition.current = 0;
     }
   }, []);
+
+  const clearTerminal = useCallback(() => {
+    if (term.current) {
+      term.current.clear();
+      term.current.writeln("WebContainer Terminal");
+      writePrompt();
+    }
+  }, [writePrompt]);
 
   // Expose methods through ref
   useImperativeHandle(ref, () => ({
@@ -165,7 +179,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
         },
       });
 
-      currentProcess.current = process;
+      currentProcess.current = process as TerminalProcess;
 
       // Handle process output
       process.output.pipeTo(new WritableStream({
@@ -177,13 +191,13 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
       }));
 
       // Wait for process to complete
-      const exitCode = await process.exit;
+      await process.exit;
       currentProcess.current = null;
 
       // Show new prompt
       writePrompt();
 
-    } catch (error) {
+    } catch {
       if (term.current) {
         term.current.writeln(`\r\nCommand not found: ${command}`);
         writePrompt();
@@ -311,35 +325,12 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
     }, 100);
 
     // Welcome message
-    terminal.writeln("🚀 WebContainer Terminal");
+    terminal.writeln("WebContainer Terminal");
     terminal.writeln("Type 'help' for available commands");
     writePrompt();
 
     return terminal;
-  }, [theme, handleTerminalInput, writePrompt]);
-
-  const connectToWebContainer = useCallback(async () => {
-    if (!webContainerInstance || !term.current) return;
-
-    try {
-      setIsConnected(true);
-      term.current.writeln("✅ Connected to WebContainer");
-      term.current.writeln("Ready to execute commands");
-      writePrompt();
-    } catch (error) {
-      setIsConnected(false);
-      term.current.writeln("❌ Failed to connect to WebContainer");
-      console.error("WebContainer connection error:", error);
-    }
-  }, [webContainerInstance, writePrompt]);
-
-  const clearTerminal = useCallback(() => {
-    if (term.current) {
-      term.current.clear();
-      term.current.writeln("🚀 WebContainer Terminal");
-      writePrompt();
-    }
-  }, [writePrompt]);
+  }, [theme, handleTerminalInput, writePrompt, terminalThemes]);
 
   const copyTerminalContent = useCallback(async () => {
     if (term.current) {
@@ -398,13 +389,16 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
       resizeObserver.observe(terminalRef.current);
     }
 
+    const activeCurrentProcess = currentProcess.current;
+    const activeShellProcess = shellProcess.current;
+
     return () => {
       resizeObserver.disconnect();
-      if (currentProcess.current) {
-        currentProcess.current.kill();
+      if (activeCurrentProcess) {
+        activeCurrentProcess.kill();
       }
-      if (shellProcess.current) {
-        shellProcess.current.kill();
+      if (activeShellProcess) {
+        activeShellProcess.kill();
       }
       if (term.current) {
         term.current.dispose();
@@ -414,10 +408,13 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
   }, [initializeTerminal]);
 
   useEffect(() => {
-    if (webContainerInstance && term.current && !isConnected) {
-      connectToWebContainer();
+    if (webContainerInstance && term.current && !connectionMessageWritten.current) {
+      connectionMessageWritten.current = true;
+      term.current.writeln("Connected to WebContainer");
+      term.current.writeln("Ready to execute commands");
+      writePrompt();
     }
-  }, [webContainerInstance, connectToWebContainer, isConnected]);
+  }, [webContainerInstance, writePrompt]);
 
   return (
     <div className={cn("flex flex-col h-full bg-background border rounded-lg overflow-hidden", className)}>

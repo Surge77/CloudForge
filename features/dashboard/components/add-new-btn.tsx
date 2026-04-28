@@ -10,11 +10,6 @@ import { toast } from "sonner";
 
 const AddNewButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<{
-    title: string;
-    template: "REACT" | "NEXTJS" | "EXPRESS" | "VUE" | "HONO" | "ANGULAR";
-    description?: string;
-  } | null>(null)
   const router = useRouter()
 
   const handleSubmit = async(data: {
@@ -22,12 +17,8 @@ const AddNewButton = () => {
     template: "REACT" | "NEXTJS" | "EXPRESS" | "VUE" | "HONO" | "ANGULAR";
     description?: string;
   }) => {
-    setSelectedTemplate(data)
     const res = await createPlayground(data);
     toast("Playground created successfully");
-    // Here you would typically handle the creation of a new playground
-    // with the selected template data
-    console.log("Creating new playground:", data)
     setIsModalOpen(false)
     router.push(`/playground/${res?.id}`)
   }

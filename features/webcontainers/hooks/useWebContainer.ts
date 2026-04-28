@@ -1,10 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { WebContainer } from '@webcontainer/api';
-import { TemplateFolder } from '@/features/playground/libs/path-to-json';
-
-interface UseWebContainerProps {
-  templateData: TemplateFolder;
-}
 
 interface UseWebContainerReturn {
   serverUrl: string | null;
@@ -15,7 +10,7 @@ interface UseWebContainerReturn {
   destroy: () => void; // Added destroy function
 }
 
-export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebContainerReturn => {
+export const useWebContainer = (): UseWebContainerReturn => {
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,10 +18,11 @@ export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebC
 
   useEffect(() => {
     let mounted = true;
+    let webcontainerInstance: WebContainer | null = null;
 
     async function initializeWebContainer() {
       try {
-        const webcontainerInstance = await WebContainer.boot();
+        webcontainerInstance = await WebContainer.boot();
         
         if (!mounted) return;
         
@@ -45,9 +41,7 @@ export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebC
 
     return () => {
       mounted = false;
-      if (instance) {
-        instance.teardown();
-      }
+      webcontainerInstance?.teardown();
     };
   }, []);
 

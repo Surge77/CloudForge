@@ -8,16 +8,16 @@ import { useState, useEffect, forwardRef } from "react"
 import { toast } from "sonner"
 
 interface MarkedToggleButtonProps extends React.ComponentPropsWithoutRef<typeof Button> {
-  markedForRevision: boolean
+  markedForRevision?: boolean
   id: string
 }
 
 export const MarkedToggleButton = forwardRef<HTMLButtonElement, MarkedToggleButtonProps>(
   ({ markedForRevision, id, onClick, className, children, ...props }, ref) => {
-    const [isMarked, setIsMarked] = useState(markedForRevision)
+    const [isMarked, setIsMarked] = useState(Boolean(markedForRevision))
 
     useEffect(() => {
-      setIsMarked(markedForRevision)
+      setIsMarked(Boolean(markedForRevision))
     }, [markedForRevision])
 
     const handleToggle = async (event: React.MouseEvent<HTMLButtonElement>) => {

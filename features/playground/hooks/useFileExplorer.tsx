@@ -2,9 +2,8 @@ import { create } from "zustand";
 
 import { toast } from "sonner";
 import { TemplateFile, TemplateFolder } from "../types";
-import { SaveUpdatedCode } from "../actions";
 import { generateFileId } from "../libs";
-import { usePlayground } from "./usePlayground";
+import type { WebContainer } from "@webcontainer/api";
 
 interface FileExplorerState {
   playgroundId: string;
@@ -26,18 +25,18 @@ interface FileExplorerState {
     newFile: TemplateFile,
     parentPath: string,
     writeFileSync: (filePath: string, content: string) => Promise<void>,
-    instance: any,
+    instance: WebContainer | null,
     saveTemplateData: (data: TemplateFolder) => Promise<void>
   ) => Promise<void>;
   handleAddFolder: (
-    newFolder: TemplateFolder, 
-    parentPath: string, 
-    instance: any, 
+    newFolder: TemplateFolder,
+    parentPath: string,
+    instance: WebContainer | null,
     saveTemplateData: (data: TemplateFolder) => Promise<void>
   ) => Promise<void>;
   handleDeleteFile: (
-    file: TemplateFile, 
-    parentPath: string, 
+    file: TemplateFile,
+    parentPath: string,
     saveTemplateData: (data: TemplateFolder) => Promise<void>
   ) => Promise<void>;
   handleDeleteFolder: (

@@ -1,4 +1,29 @@
-import { useState, useRef, useCallback } from "react";
+import { useCallback, useState } from "react";
+import type { Monaco } from "@monaco-editor/react";
+
+interface EditorModel {
+  getValue: () => string;
+}
+
+interface EditorPosition {
+  lineNumber: number;
+  column: number;
+}
+
+export interface SuggestionEditor {
+  getModel: () => EditorModel | null;
+  getPosition: () => EditorPosition | null;
+  executeEdits: (
+    source: string,
+    edits: {
+      range: unknown;
+      text: string;
+      forceMoveMarkers: boolean;
+    }[]
+  ) => boolean;
+  deltaDecorations: (oldDecorations: string[], newDecorations: unknown[]) => string[];
+  trigger: (source: string, handlerId: string, payload: unknown) => void;
+}
 
 interface AISuggestionsState {
   suggestion: string | null;
@@ -8,12 +33,16 @@ interface AISuggestionsState {
   isEnabled: boolean;
 }
 
+interface CodeSuggestionResponse {
+  suggestion?: string;
+}
+
 interface UseAISuggestionsReturn extends AISuggestionsState {
   toggleEnabled: () => void;
-  fetchSuggestion: (type: string, editor: any) => Promise<void>;
-  acceptSuggestion: (editor: any, monaco: any) => void;
-  rejectSuggestion: (editor: any) => void;
-  clearSuggestion: (editor: any) => void;
+  fetchSuggestion: (type: string, editor: SuggestionEditor | null) => Promise<void>;
+  acceptSuggestion: (editor: SuggestionEditor | null, monaco: Monaco | null) => void;
+  rejectSuggestion: (editor: SuggestionEditor | null) => void;
+  clearSuggestion: (editor: SuggestionEditor | null) => void;
 }
 
 export const useAISuggestions = (): UseAISuggestionsReturn => {
@@ -26,89 +55,60 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   });
 
   const toggleEnabled = useCallback(() => {
-    console.log("Toggling AI suggestions");
     setState((prev) => ({ ...prev, isEnabled: !prev.isEnabled }));
   }, []);
 
-  const fetchSuggestion = useCallback(async (type: string, editor: any) => {
-    console.log("Fetching AI suggestion...");
-    console.log("AI Suggestions Enabled:", state.isEnabled);
-    console.log("Editor Instance Available:", !!editor);
-
-    // Use functional state update to get fresh state
-    setState((currentState) => {
-      if (!currentState.isEnabled) {
-        console.warn("AI suggestions are disabled.");
-        return currentState;
-      }
-
-      if (!editor) {
-        console.warn("Editor instance is not available.");
-        return currentState;
-      }
+  const fetchSuggestion = useCallback(
+    async (type: string, editor: SuggestionEditor | null) => {
+      if (!state.isEnabled || !editor) return;
 
       const model = editor.getModel();
       const cursorPosition = editor.getPosition();
 
-      if (!model || !cursorPosition) {
-        console.warn("Editor model or cursor position is not available.");
-        return currentState;
-      }
+      if (!model || !cursorPosition) return;
 
-      // Set loading state immediately
-      const newState = { ...currentState, isLoading: true };
+      setState((prev) => ({ ...prev, isLoading: true }));
 
-      // Perform the async operation
-      (async () => {
-        try {
-          const payload = {
+      try {
+        const response = await fetch("/api/code-suggestion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             fileContent: model.getValue(),
             cursorLine: cursorPosition.lineNumber - 1,
             cursorColumn: cursorPosition.column - 1,
             suggestionType: type,
-          };
-          console.log("Request payload:", payload);
+          }),
+        });
 
-          const response = await fetch("/api/code-suggestion", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+        if (!response.ok) {
+          throw new Error(`API responded with status ${response.status}`);
+        }
 
-          if (!response.ok) {
-            throw new Error(`API responded with status ${response.status}`);
-          }
+        const data = (await response.json()) as CodeSuggestionResponse;
+        const suggestionText = data.suggestion?.trim();
 
-          const data = await response.json();
-          console.log("API response:", data);
-
-          if (data.suggestion) {
-            const suggestionText = data.suggestion.trim();
-            setState((prev) => ({
-              ...prev,
-              suggestion: suggestionText,
-              position: {
+        setState((prev) => ({
+          ...prev,
+          suggestion: suggestionText || null,
+          position: suggestionText
+            ? {
                 line: cursorPosition.lineNumber,
                 column: cursorPosition.column,
-              },
-              isLoading: false,
-            }));
-          } else {
-            console.warn("No suggestion received from API.");
-            setState((prev) => ({ ...prev, isLoading: false }));
-          }
-        } catch (error) {
-          console.error("Error fetching code suggestion:", error);
-          setState((prev) => ({ ...prev, isLoading: false }));
-        }
-      })();
-
-      return newState;
-    });
-  }, []); // Remove state.isEnabled from dependencies to prevent stale closures
+              }
+            : null,
+          isLoading: false,
+        }));
+      } catch (error) {
+        console.error("Error fetching code suggestion:", error);
+        setState((prev) => ({ ...prev, isLoading: false }));
+      }
+    },
+    [state.isEnabled]
+  );
 
   const acceptSuggestion = useCallback(
-    (editor: any, monaco: any) => {
+    (editor: SuggestionEditor | null, monaco: Monaco | null) => {
       setState((currentState) => {
         if (!currentState.suggestion || !currentState.position || !editor || !monaco) {
           return currentState;
@@ -125,8 +125,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
           },
         ]);
 
-        // Clear decorations
-        if (editor && currentState.decoration.length > 0) {
+        if (currentState.decoration.length > 0) {
           editor.deltaDecorations(currentState.decoration, []);
         }
 
@@ -141,7 +140,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     []
   );
 
-  const rejectSuggestion = useCallback((editor: any) => {
+  const rejectSuggestion = useCallback((editor: SuggestionEditor | null) => {
     setState((currentState) => {
       if (editor && currentState.decoration.length > 0) {
         editor.deltaDecorations(currentState.decoration, []);
@@ -155,7 +154,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     });
   }, []);
 
-  const clearSuggestion = useCallback((editor: any) => {
+  const clearSuggestion = useCallback((editor: SuggestionEditor | null) => {
     setState((currentState) => {
       if (editor && currentState.decoration.length > 0) {
         editor.deltaDecorations(currentState.decoration, []);

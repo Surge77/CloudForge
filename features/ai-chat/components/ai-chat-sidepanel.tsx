@@ -90,6 +90,19 @@ interface ChatMessage {
   model?: string;
 }
 
+type ChatMode = "chat" | "review" | "fix" | "optimize";
+
+interface ChatModeContext {
+  activeFile?: string;
+  activeFileContent?: string;
+  language?: string;
+  cursorPosition?: { line: number; column: number };
+}
+
+const isChatMode = (value: string): value is ChatMode => {
+  return ["chat", "review", "fix", "optimize"].includes(value);
+};
+
 interface AIChatSidePanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -317,12 +330,9 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [dragOver, setDragOver] = useState(false);
-  const [chatMode, setChatMode] = useState<
-    "chat" | "review" | "fix" | "optimize"
-  >("chat");
+  const [chatMode, setChatMode] = useState<ChatMode>("chat");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
-  const [showSettings, setShowSettings] = useState(false);
   const [autoSave, setAutoSave] = useState(true);
   const [streamResponse, setStreamResponse] = useState(true);
 
@@ -404,10 +414,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
     return "text";
   };
 
-  const detectFileType = (
-    fileName: string,
-    content: string
-  ): FileAttachment["type"] => {
+  const detectFileType = (fileName: string): FileAttachment["type"] => {
     // Only allow code files
     const ext = fileName.split(".").pop()?.toLowerCase();
     if (
@@ -444,7 +451,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
     mimeType?: string
   ) => {
     const language = detectLanguage(fileName, content);
-    const type = detectFileType(fileName, content);
+    const type = detectFileType(fileName);
     if (type !== "code") return; // Only allow code files
     const newFile: FileAttachment = {
       id: Date.now().toString(),
@@ -665,11 +672,16 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
     return suggestions;
   };
 
-  const getChatModePrompt = (mode: string, content: string, context: any) => {
+  const getChatModePrompt = (
+    mode: ChatMode,
+    content: string,
+    context: ChatModeContext
+  ) => {
     const baseContext = {
-      activeFile: activeFileName,
-      language: activeFileLanguage,
-      cursorPosition,
+      activeFile: context.activeFile || activeFileName,
+      language: context.language || activeFileLanguage,
+      cursorPosition: context.cursorPosition || cursorPosition,
+      activeFileContent: context.activeFileContent,
       attachments: attachments.map((f) => ({
         name: f.name,
         language: f.language,
@@ -696,7 +708,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
@@ -999,7 +1011,9 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
             {/* Enhanced Controls */}
             <Tabs
               value={chatMode}
-              onValueChange={(value) => setChatMode(value as any)}
+              onValueChange={(value) => {
+                if (isChatMode(value)) setChatMode(value);
+              }}
               className="px-6"
             >
               <div className="flex items-center justify-between mb-4">
@@ -1111,7 +1125,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                 </div>
               )}
 
-              {filteredMessages.map((msg, index) => (
+              {filteredMessages.map((msg) => (
                 <div key={msg.id} className="space-y-4">
                   <div
                     className={cn(
@@ -1150,7 +1164,9 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                               children,
                               className,
                               ...props
-                            }: any) => (
+                            }: React.ComponentProps<"code"> & {
+                              inline?: boolean;
+                            }) => (
                               <EnhancedCodeBlock
                                 className={className}
                                 inline={props.inline as boolean}
@@ -1346,7 +1362,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                   onPaste={handlePaste}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                      handleSendMessage(e as any);
+                      handleSendMessage(e);
                     }
                   }}
                   disabled={isLoading}

@@ -1,6 +1,7 @@
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { DashboardSidebar } from "@/features/dashboard/components/dashboard-sidebar"
 import { getAllPlaygroundForUser } from "@/features/playground/actions"
+import type { Templates } from "@prisma/client"
 import type React from "react"
 
 export default async function DashboardLayout({
@@ -11,7 +12,7 @@ export default async function DashboardLayout({
   const playgroundData = await getAllPlaygroundForUser() || []
 
   // Store icon names (strings) instead of the components themselves
-  const technologyIconMap: Record<string, string> = {
+  const technologyIconMap: Record<Templates, string> = {
     REACT: "Zap",
     NEXTJS: "Lightbulb",
     EXPRESS: "Database",
@@ -21,13 +22,13 @@ export default async function DashboardLayout({
   }
 
   const formattedPlaygroundData =
-    playgroundData?.map((item: any) => ({
+    playgroundData.map((item) => ({
       id: item.id,
       name: item.title,
       starred: item.Starmark?.[0]?.isMarked || false,
       // Pass the icon name as a string
       icon: technologyIconMap[item.template] || "Code2", // Default to "Code2" if template not found
-    })) || []
+    }))
 
   return (
     <SidebarProvider>

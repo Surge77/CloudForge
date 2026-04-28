@@ -1,0 +1,3 @@
+[submodule "cloudforge-starters"]
+	path = cloudforge-starters
+	url = https://github.com/stackblitz/starters.git

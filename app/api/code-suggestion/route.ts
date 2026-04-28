@@ -50,9 +50,12 @@ export async function POST(request: NextRequest) {
         generatedAt: new Date().toISOString(),
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Context analysis error:", error)
-    return NextResponse.json({ error: "Internal server error", message: error.message }, { status: 500 })
+    return NextResponse.json({
+      error: "Internal server error",
+      message: error instanceof Error ? error.message : "Unknown error",
+    }, { status: 500 })
   }
 }
 
@@ -128,13 +131,19 @@ Generate suggestion:`
  * Generate suggestion using AI service
  */
 async function generateSuggestion(prompt: string): Promise<string> {
+  const baseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434"
+  const model = process.env.OLLAMA_MODEL || "codellama:latest"
+  const timeoutMs = Number(process.env.AI_REQUEST_TIMEOUT_MS || 30000)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+
   try {
-    // Replace this with your actual AI service call
-    const response = await fetch("http://localhost:11434/api/generate", {
+    const response = await fetch(`${baseUrl}/api/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
       body: JSON.stringify({
-        model: "codellama:latest",
+        model,
         prompt,
         stream: false,
         options: {
@@ -160,10 +169,12 @@ async function generateSuggestion(prompt: string): Promise<string> {
     // Remove cursor markers if present
     suggestion = suggestion.replace(/\|CURSOR\|/g, "").trim()
 
-    return suggestion
+    return suggestion || "// AI suggestion unavailable"
   } catch (error) {
     console.error("AI generation error:", error)
     return "// AI suggestion unavailable"
+  } finally {
+    clearTimeout(timeout)
   }
 }
 
@@ -236,12 +247,4 @@ function detectIncompletePatterns(line: string, column: number): string[] {
   if (/\.\s*$/.test(beforeCursor)) patterns.push("method-call")
 
   return patterns
-}
-
-function getLastNonEmptyLine(lines: string[], currentLine: number): string {
-  for (let i = currentLine - 1; i >= 0; i--) {
-    const line = lines[i]
-    if (line.trim() !== "") return line
-  }
-  return ""
 }

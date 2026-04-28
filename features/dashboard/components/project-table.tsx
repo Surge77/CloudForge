@@ -61,10 +61,9 @@ interface ProjectTableProps {
   onUpdateProject?: (
     id: string,
     data: { title: string; description: string }
-  ) => Promise<void>;
-  onDeleteProject?: (id: string) => Promise<void>;
-  onDuplicateProject?: (id: string) => Promise<void>;
-  onMarkasFavorite?: (id: string) => Promise<void>;
+  ) => Promise<unknown>;
+  onDeleteProject?: (id: string) => Promise<unknown>;
+  onDuplicateProject?: (id: string) => Promise<unknown>;
 }
 
 interface EditProjectData {
@@ -77,7 +76,6 @@ export default function ProjectTable({
   onUpdateProject,
   onDeleteProject,
   onDuplicateProject,
-  onMarkasFavorite,
 }: ProjectTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -87,7 +85,6 @@ export default function ProjectTable({
     description: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [favoutrie, setFavourite] = useState(false);
 
   const handleEditClick = (project: Project) => {
     setSelectedProject(project);
@@ -116,21 +113,6 @@ export default function ProjectTable({
     } catch (error) {
       toast.error("Failed to update project");
       console.error("Error updating project:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleMarkasFavorite = async (project: Project) => {
-    if (!onMarkasFavorite) return;
-
-    setIsLoading(true);
-    try {
-      await onMarkasFavorite(project.id);
-      toast.success("Project marked as favorite successfully");
-    } catch (error) {
-      toast.error("Failed to mark project as favorite");
-      console.error("Error marking project as favorite:", error);
     } finally {
       setIsLoading(false);
     }
@@ -219,7 +201,7 @@ export default function ProjectTable({
                     <div className="w-8 h-8 rounded-full overflow-hidden">
                       <Image
                         src={project.user.image || "/placeholder.svg"}
-                        alt={project.user.name}
+                        alt={project.user.name || "Project owner"}
                         width={32}
                         height={32}
                         className="object-cover"
@@ -304,7 +286,7 @@ export default function ProjectTable({
           <DialogHeader>
             <DialogTitle>Edit Project</DialogTitle>
             <DialogDescription>
-              Make changes to your project details here. Click save when you're
+              Make changes to your project details here. Click save when you&apos;re
               done.
             </DialogDescription>
           </DialogHeader>
@@ -362,7 +344,7 @@ export default function ProjectTable({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{selectedProject?.title}"? This
+              Are you sure you want to delete &quot;{selectedProject?.title}&quot;? This
               action cannot be undone. All files and data associated with this
               project will be permanently removed.
             </AlertDialogDescription>

@@ -11,6 +11,7 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "cloudforge-starters/**",
     "next-env.d.ts",
   ]),
 ]);
