@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { WebContainer } from '@webcontainer/api';
+import {
+  getWebContainerInstance,
+  teardownWebContainerInstance,
+} from '@/features/webcontainers/lib/webcontainer-singleton';
 
 interface UseWebContainerReturn {
   serverUrl: string | null;
@@ -18,15 +22,14 @@ export const useWebContainer = (): UseWebContainerReturn => {
 
   useEffect(() => {
     let mounted = true;
-    let webcontainerInstance: WebContainer | null = null;
 
     async function initializeWebContainer() {
       try {
-        webcontainerInstance = await WebContainer.boot();
+        const instance = await getWebContainerInstance();
         
         if (!mounted) return;
         
-        setInstance(webcontainerInstance);
+        setInstance(instance);
         setIsLoading(false);
       } catch (err) {
         console.error('Failed to initialize WebContainer:', err);
@@ -41,7 +44,6 @@ export const useWebContainer = (): UseWebContainerReturn => {
 
     return () => {
       mounted = false;
-      webcontainerInstance?.teardown();
     };
   }, []);
 
@@ -70,12 +72,10 @@ export const useWebContainer = (): UseWebContainerReturn => {
 
   // Added destroy function
   const destroy = useCallback(() => {
-    if (instance) {
-      instance.teardown();
-      setInstance(null);
-      setServerUrl(null);
-    }
-  }, [instance]);
+    teardownWebContainerInstance();
+    setInstance(null);
+    setServerUrl(null);
+  }, []);
 
   return { serverUrl, isLoading, error, instance, writeFileSync, destroy };
 };

@@ -2,6 +2,7 @@
 
 import React, { useRef } from "react";
 import { useState, useCallback } from "react";
+import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { TemplateFileTree } from "@/features/playground/components/playground-explorer";
@@ -16,7 +17,15 @@ import {
   FileText,
   FolderOpen,
   AlertCircle,
+  ArrowLeft,
+  Bot,
+  Monitor,
+  MoreHorizontal,
+  PanelRightClose,
+  PanelRightOpen,
   Save,
+  SaveAll,
+  Terminal,
   X,
   Settings,
 } from "lucide-react";
@@ -42,15 +51,21 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import WebContainerPreview from "@/features/webcontainers/components/webcontainer-preview";
+import TerminalComponent, {
+  type TerminalRef,
+} from "@/features/webcontainers/components/terminal";
 import LoadingStep from "@/components/ui/loader";
 import { PlaygroundEditor } from "@/features/playground/components/playground-editor";
 import ToggleAI from "@/features/playground/components/toggle-ai";
+import { AIChatSidePanel } from "@/features/ai-chat/components/ai-chat-sidepanel";
 import { useFileExplorer } from "@/features/playground/hooks/useFileExplorer";
 import { usePlayground } from "@/features/playground/hooks/usePlayground";
 import { useAISuggestions } from "@/features/playground/hooks/useAISuggestion";
 import { useWebContainer } from "@/features/webcontainers/hooks/useWebContainer";
 import { findFilePath } from "@/features/playground/libs";
+import { getEditorLanguage } from "@/features/playground/libs/editor-config";
 import { ConfirmationDialog } from "@/features/playground/components/dialogs/conformation-dialog";
+import { templateConfig } from "@/lib/template";
 
 const MainPlaygroundPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -65,6 +80,8 @@ const MainPlaygroundPage: React.FC = () => {
   });
 
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [isTerminalVisible, setIsTerminalVisible] = useState(false);
 
   // Custom hooks
   const { playgroundData, templateData, isLoading, error, saveTemplateData } =
@@ -97,6 +114,7 @@ const MainPlaygroundPage: React.FC = () => {
   } = useWebContainer();
 
   const lastSyncedContent = useRef<Map<string, string>>(new Map());
+  const terminalRef = useRef<TerminalRef>(null);
 
   // Set template data when playground loads
   React.useEffect(() => {
@@ -179,6 +197,35 @@ const MainPlaygroundPage: React.FC = () => {
 
   const activeFile = openFiles.find((file) => file.id === activeFileId);
   const hasUnsavedChanges = openFiles.some((file) => file.hasUnsavedChanges);
+  const activeFileName = activeFile
+    ? `${activeFile.filename}.${activeFile.fileExtension}`
+    : undefined;
+  const activeFileLanguage = activeFile
+    ? getEditorLanguage(activeFile.fileExtension || "")
+    : "plaintext";
+  const activeFilePath =
+    activeFile && templateData
+      ? findFilePath(activeFile, templateData) ?? undefined
+      : undefined;
+  const currentTemplate = playgroundData?.template || "REACT";
+  const runtimeConfig = templateConfig[currentTemplate];
+  const runCurrentFileCommand =
+    activeFile && activeFilePath
+      ? activeFile.fileExtension.toLowerCase() === "js" ||
+        activeFile.fileExtension.toLowerCase() === "mjs" ||
+        activeFile.fileExtension.toLowerCase() === "cjs"
+        ? `node ${activeFilePath}`
+        : activeFile.fileExtension.toLowerCase() === "ts"
+        ? `npx tsx ${activeFilePath}`
+        : null
+      : null;
+  const terminalQuickCommands = [
+    ...(runCurrentFileCommand
+      ? [{ label: "Run File", command: runCurrentFileCommand }]
+      : []),
+    { label: "Install", command: runtimeConfig.installCommand.join(" ") },
+    { label: "Start", command: runtimeConfig.startCommand.join(" ") },
+  ];
 
   const handleFileSelect = (file: TemplateFile) => {
     openFile(file);
@@ -290,6 +337,50 @@ const MainPlaygroundPage: React.FC = () => {
     }
   };
 
+  const handleInsertCodeFromAI = useCallback(
+    (code: string, fileName?: string, position?: { line: number; column: number }) => {
+      const targetFile =
+        (fileName &&
+          openFiles.find(
+            (file) => `${file.filename}.${file.fileExtension}` === fileName
+          )) ||
+        activeFile;
+
+      if (!targetFile) {
+        toast.error("Open a file before inserting AI code");
+        return;
+      }
+
+      const currentContent = targetFile.content || "";
+      let nextContent = `${currentContent}${currentContent.endsWith("\n") ? "" : "\n"}${code}`;
+
+      if (position) {
+        const lines = currentContent.split("\n");
+        const lineIndex = Math.max(0, Math.min(position.line - 1, lines.length - 1));
+        const columnIndex = Math.max(
+          0,
+          Math.min(position.column - 1, lines[lineIndex]?.length ?? 0)
+        );
+
+        lines[lineIndex] = `${lines[lineIndex].slice(0, columnIndex)}${code}${lines[
+          lineIndex
+        ].slice(columnIndex)}`;
+        nextContent = lines.join("\n");
+      }
+
+      updateFileContent(targetFile.id, nextContent);
+      setActiveFileId(targetFile.id);
+      toast.success(`Inserted AI code into ${targetFile.filename}.${targetFile.fileExtension}`);
+    },
+    [activeFile, openFiles, setActiveFileId, updateFileContent]
+  );
+
+  const handleRunCodeFromAI = useCallback((code: string, language: string) => {
+    void code;
+    void language;
+    toast.info("Code run requests are queued for terminal integration");
+  }, []);
+
   // Add event to save file by click ctrl + s
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -305,12 +396,12 @@ const MainPlaygroundPage: React.FC = () => {
   // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-4">
-        <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-        <h2 className="text-xl font-semibold text-red-600 mb-2">
+      <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-background p-4">
+        <AlertCircle className="mb-4 h-12 w-12 text-destructive" />
+        <h2 className="mb-2 text-xl font-semibold text-destructive">
           Something went wrong
         </h2>
-        <p className="text-gray-600 mb-4">{error}</p>
+        <p className="mb-4 text-muted-foreground">{error}</p>
         <Button onClick={() => window.location.reload()} variant="destructive">
           Try Again
         </Button>
@@ -321,9 +412,9 @@ const MainPlaygroundPage: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-4">
-        <div className="w-full max-w-md p-6 rounded-lg shadow-sm border">
-          <h2 className="text-xl font-semibold mb-6 text-center">
+      <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-background p-4">
+        <div className="forge-panel w-full max-w-md rounded-lg p-6">
+          <h2 className="mb-6 text-center text-xl font-semibold">
             Loading Playground
           </h2>
           <div className="mb-8">
@@ -347,9 +438,9 @@ const MainPlaygroundPage: React.FC = () => {
   // No template data
   if (!templateData) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-4">
-        <FolderOpen className="h-12 w-12 text-amber-500 mb-4" />
-        <h2 className="text-xl font-semibold text-amber-600 mb-2">
+      <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-background p-4">
+        <FolderOpen className="mb-4 h-12 w-12 text-primary" />
+        <h2 className="mb-2 text-xl font-semibold">
           No template data available
         </h2>
         <Button onClick={() => window.location.reload()} variant="outline">
@@ -375,84 +466,208 @@ const MainPlaygroundPage: React.FC = () => {
           onRenameFolder={wrappedHandleRenameFolder}
         />
 
-        <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
+        <SidebarInset className="min-h-0 overflow-hidden">
+          <header className="flex h-11 shrink-0 items-center gap-2 border-b border-border/80 bg-background/95 px-3 backdrop-blur-xl">
+            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="ghost" asChild className="h-8 px-2">
+                    <Link href="/dashboard" aria-label="Open project explorer">
+                      <span className="hidden text-sm text-muted-foreground md:inline">
+                        Open Project Explorer
+                      </span>
+                      <ArrowLeft className="h-4 w-4 md:hidden" />
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Open project explorer</TooltipContent>
+              </Tooltip>
 
-            <div className="flex flex-1 items-center gap-2">
-              <div className="flex flex-col flex-1">
-                <h1 className="text-sm font-medium">
-                  {playgroundData?.title || "Code Playground"}
-                </h1>
-                <p className="text-xs text-muted-foreground">
-                  {openFiles.length} file(s) open
-                  {hasUnsavedChanges && " • Unsaved changes"}
-                </p>
-              </div>
+              <Separator orientation="vertical" className="mx-1 h-5" />
+              <SidebarTrigger className="h-8 w-8" />
 
-              <div className="flex items-center gap-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleSave()}
-                      disabled={!activeFile || !activeFile.hasUnsavedChanges}
-                    >
-                      <Save className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Save (Ctrl+S)</TooltipContent>
-                </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => handleSave()}
+                    disabled={!activeFile || !activeFile.hasUnsavedChanges}
+                    aria-label="Save current file"
+                  >
+                    <Save className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Save current file</TooltipContent>
+              </Tooltip>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleSaveAll}
-                      disabled={!hasUnsavedChanges}
-                    >
-                      <Save className="h-4 w-4" /> All
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Save All (Ctrl+Shift+S)</TooltipContent>
-                </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={handleSaveAll}
+                    disabled={!hasUnsavedChanges}
+                    aria-label="Save all files"
+                  >
+                    <SaveAll className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Save all files</TooltipContent>
+              </Tooltip>
 
+              <Separator orientation="vertical" className="mx-1 h-5" />
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon-sm"
+                    variant={isPreviewVisible ? "default" : "ghost"}
+                    onClick={() => setIsPreviewVisible((value) => !value)}
+                    aria-label={isPreviewVisible ? "Close output panel" : "Open output panel"}
+                  >
+                    {isPreviewVisible ? (
+                      <PanelRightClose className="h-4 w-4" />
+                    ) : (
+                      <PanelRightOpen className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isPreviewVisible ? "Close output" : "Open output"}
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon-sm"
+                    variant={isTerminalVisible ? "default" : "ghost"}
+                    onClick={() => setIsTerminalVisible((value) => !value)}
+                    aria-label={isTerminalVisible ? "Hide terminal" : "Show terminal"}
+                  >
+                    <Terminal className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isTerminalVisible ? "Hide terminal" : "Show terminal"}
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon-sm"
+                    variant={isAIChatOpen ? "default" : "ghost"}
+                    onClick={() => setIsAIChatOpen((value) => !value)}
+                    aria-label={isAIChatOpen ? "Close AI assistant" : "Open AI assistant"}
+                  >
+                    <Bot className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isAIChatOpen ? "Close AI assistant" : "Open AI assistant"}
+                </TooltipContent>
+              </Tooltip>
+
+              <div className="ml-1">
                 <ToggleAI
                   isEnabled={aiSuggestions.isEnabled}
                   onToggle={aiSuggestions.toggleEnabled}
+                  onOpenChat={() => setIsAIChatOpen(true)}
                   suggestionLoading={aiSuggestions.isLoading}
                 />
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="outline">
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => setIsPreviewVisible(!isPreviewVisible)}
-                    >
-                      {isPreviewVisible ? "Hide" : "Show"} Preview
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={closeAllFiles}>
-                      Close All Files
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
+            </div>
+
+            <div className="hidden min-w-0 flex-1 flex-col items-center px-3 text-center lg:flex">
+              <h1 className="max-w-full truncate font-code text-xs font-medium">
+                {playgroundData?.title || "Code Playground"}
+              </h1>
+              <p className="text-[11px] text-muted-foreground">
+                {openFiles.length} file(s) open
+                {hasUnsavedChanges && " / unsaved changes"}
+              </p>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon-sm"
+                    variant={isPreviewVisible ? "default" : "ghost"}
+                    onClick={() => setIsPreviewVisible((value) => !value)}
+                    aria-label={isPreviewVisible ? "Close output panel" : "Open output panel"}
+                  >
+                    <Monitor className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isPreviewVisible ? "Close output panel" : "Open output panel"}
+                </TooltipContent>
+              </Tooltip>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon-sm" variant="ghost" aria-label="More editor actions">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => setIsPreviewVisible((value) => !value)}
+                  >
+                    {isPreviewVisible ? "Close" : "Open"} Output
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setIsTerminalVisible((value) => !value)}
+                  >
+                    {isTerminalVisible ? "Hide" : "Show"} Terminal
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setIsAIChatOpen((value) => !value)}
+                  >
+                    {isAIChatOpen ? "Close" : "Open"} AI Assistant
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={closeAllFiles}>
+                    Close All Files
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon-sm" variant="ghost" aria-label="Layout settings">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => setIsPreviewVisible((value) => !value)}
+                  >
+                    {isPreviewVisible ? "Close" : "Open"} Output Panel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setIsTerminalVisible((value) => !value)}
+                  >
+                    {isTerminalVisible ? "Hide" : "Show"} Terminal
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setIsAIChatOpen((value) => !value)}
+                  >
+                    {isAIChatOpen ? "Close" : "Open"} AI Assistant
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
 
-          <div className="h-[calc(100vh-4rem)]">
+          <div className="min-h-0 flex-1 overflow-hidden">
             {openFiles.length > 0 ? (
               <div className="h-full flex flex-col">
                 {/* File Tabs */}
-                <div className="border-b bg-muted/30">
+                <div className="border-b border-border/80 bg-muted/30">
                   <Tabs
                     value={activeFileId || ""}
                     onValueChange={setActiveFileId}
@@ -463,7 +678,7 @@ const MainPlaygroundPage: React.FC = () => {
                           <TabsTrigger
                             key={file.id}
                             value={file.id}
-                            className="relative h-8 px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm group"
+                            className="group relative h-8 rounded-md px-3 font-code text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"
                           >
                             <div className="flex items-center gap-2">
                               <FileText className="h-3 w-3" />
@@ -471,7 +686,7 @@ const MainPlaygroundPage: React.FC = () => {
                                 {file.filename}.{file.fileExtension}
                               </span>
                               {file.hasUnsavedChanges && (
-                                <span className="h-2 w-2 rounded-full bg-orange-500" />
+                                <span className="h-2 w-2 rounded-full bg-primary" />
                               )}
                               <span
                                 className="ml-2 h-4 w-4 hover:bg-destructive hover:text-destructive-foreground rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
@@ -501,55 +716,192 @@ const MainPlaygroundPage: React.FC = () => {
                   </Tabs>
                 </div>
 
-                {/* Editor and Preview */}
-                <div className="flex-1">
-                  <ResizablePanelGroup
-                    direction="horizontal"
-                    className="h-full"
-                  >
-                    <ResizablePanel defaultSize={isPreviewVisible ? 50 : 100}>
-                      <PlaygroundEditor
-                        activeFile={activeFile}
-                        content={activeFile?.content || ""}
-                        onContentChange={(value) =>
-                          activeFileId && updateFileContent(activeFileId, value)
-                        }
-                        suggestion={aiSuggestions.suggestion}
-                        suggestionLoading={aiSuggestions.isLoading}
-                        suggestionPosition={aiSuggestions.position}
-                        onRejectSuggestion={(editor) =>
-                          aiSuggestions.rejectSuggestion(editor)
-                        }
-                        onTriggerSuggestion={(type, editor) =>
-                          aiSuggestions.fetchSuggestion(type, editor)
-                        }
-                      />
-                    </ResizablePanel>
+                {/* Editor, Output, AI, and Terminal */}
+                <div className="min-h-0 flex-1">
+                  {isTerminalVisible ? (
+                    <ResizablePanelGroup direction="vertical" className="h-full">
+                      <ResizablePanel defaultSize={68} minSize={35}>
+                        <ResizablePanelGroup
+                          direction="horizontal"
+                          className="h-full"
+                        >
+                          <ResizablePanel
+                            defaultSize={
+                              isAIChatOpen
+                                ? isPreviewVisible
+                                  ? 42
+                                  : 68
+                                : isPreviewVisible
+                                ? 52
+                                : 100
+                            }
+                            minSize={28}
+                          >
+                            <PlaygroundEditor
+                              activeFile={activeFile}
+                              content={activeFile?.content || ""}
+                              onContentChange={(value) =>
+                                activeFileId &&
+                                updateFileContent(activeFileId, value)
+                              }
+                              suggestion={aiSuggestions.suggestion}
+                              suggestionLoading={aiSuggestions.isLoading}
+                              suggestionPosition={aiSuggestions.position}
+                              onRejectSuggestion={(editor) =>
+                                aiSuggestions.rejectSuggestion(editor)
+                              }
+                              onTriggerSuggestion={(type, editor) =>
+                                aiSuggestions.fetchSuggestion(type, editor)
+                              }
+                            />
+                          </ResizablePanel>
 
-                    {isPreviewVisible && (
-                      <>
-                        <ResizableHandle />
-                        <ResizablePanel defaultSize={50}>
-                          <WebContainerPreview
-                            templateData={templateData}
-                            template={playgroundData?.template || "REACT"}
-                            instance={instance}
-                            isLoading={containerLoading}
-                            error={containerError}
-                            forceResetup={false}
-                          />
-                        </ResizablePanel>
-                      </>
-                    )}
-                  </ResizablePanelGroup>
+                          {isPreviewVisible && (
+                            <>
+                              <ResizableHandle />
+                              <ResizablePanel
+                                defaultSize={isAIChatOpen ? 25 : 48}
+                                minSize={20}
+                              >
+                                <WebContainerPreview
+                                  templateData={templateData}
+                                  template={currentTemplate}
+                                  instance={instance}
+                                  isLoading={containerLoading}
+                                  error={containerError}
+                                  terminalRef={terminalRef}
+                                  onClose={() => setIsPreviewVisible(false)}
+                                  forceResetup={false}
+                                />
+                              </ResizablePanel>
+                            </>
+                          )}
+
+                          {isAIChatOpen && (
+                            <>
+                              <ResizableHandle />
+                              <ResizablePanel
+                                defaultSize={33}
+                                minSize={28}
+                                maxSize={48}
+                              >
+                                <AIChatSidePanel
+                                  isOpen={isAIChatOpen}
+                                  onClose={() => setIsAIChatOpen(false)}
+                                  onInsertCode={handleInsertCodeFromAI}
+                                  onRunCode={handleRunCodeFromAI}
+                                  activeFileName={activeFileName}
+                                  activeFileContent={activeFile?.content}
+                                  activeFileLanguage={activeFileLanguage}
+                                  theme="dark"
+                                  variant="panel"
+                                />
+                              </ResizablePanel>
+                            </>
+                          )}
+                        </ResizablePanelGroup>
+                      </ResizablePanel>
+                      <ResizableHandle />
+                      <ResizablePanel defaultSize={32} minSize={18} maxSize={50}>
+                        <TerminalComponent
+                          ref={terminalRef}
+                          webContainerInstance={instance}
+                          theme="dark"
+                          className="h-full rounded-none border-0"
+                          quickCommands={terminalQuickCommands}
+                          onClose={() => setIsTerminalVisible(false)}
+                        />
+                      </ResizablePanel>
+                    </ResizablePanelGroup>
+                  ) : (
+                    <ResizablePanelGroup
+                      direction="horizontal"
+                      className="h-full"
+                    >
+                      <ResizablePanel
+                        defaultSize={
+                          isAIChatOpen
+                            ? isPreviewVisible
+                              ? 42
+                              : 68
+                            : isPreviewVisible
+                            ? 52
+                            : 100
+                        }
+                        minSize={28}
+                      >
+                        <PlaygroundEditor
+                          activeFile={activeFile}
+                          content={activeFile?.content || ""}
+                          onContentChange={(value) =>
+                            activeFileId &&
+                            updateFileContent(activeFileId, value)
+                          }
+                          suggestion={aiSuggestions.suggestion}
+                          suggestionLoading={aiSuggestions.isLoading}
+                          suggestionPosition={aiSuggestions.position}
+                          onRejectSuggestion={(editor) =>
+                            aiSuggestions.rejectSuggestion(editor)
+                          }
+                          onTriggerSuggestion={(type, editor) =>
+                            aiSuggestions.fetchSuggestion(type, editor)
+                          }
+                        />
+                      </ResizablePanel>
+
+                      {isPreviewVisible && (
+                        <>
+                          <ResizableHandle />
+                          <ResizablePanel
+                            defaultSize={isAIChatOpen ? 25 : 48}
+                            minSize={20}
+                          >
+                            <WebContainerPreview
+                              templateData={templateData}
+                              template={currentTemplate}
+                              instance={instance}
+                              isLoading={containerLoading}
+                              error={containerError}
+                              terminalRef={terminalRef}
+                              onClose={() => setIsPreviewVisible(false)}
+                              forceResetup={false}
+                            />
+                          </ResizablePanel>
+                        </>
+                      )}
+
+                      {isAIChatOpen && (
+                        <>
+                          <ResizableHandle />
+                          <ResizablePanel
+                            defaultSize={33}
+                            minSize={28}
+                            maxSize={48}
+                          >
+                            <AIChatSidePanel
+                              isOpen={isAIChatOpen}
+                              onClose={() => setIsAIChatOpen(false)}
+                              onInsertCode={handleInsertCodeFromAI}
+                              onRunCode={handleRunCodeFromAI}
+                              activeFileName={activeFileName}
+                              activeFileContent={activeFile?.content}
+                              activeFileLanguage={activeFileLanguage}
+                              theme="dark"
+                              variant="panel"
+                            />
+                          </ResizablePanel>
+                        </>
+                      )}
+                    </ResizablePanelGroup>
+                  )}
                 </div>
               </div>
             ) : (
               <div className="flex flex-col h-full items-center justify-center text-muted-foreground gap-4">
-                <FileText className="h-16 w-16 text-gray-300" />
+                  <FileText className="h-16 w-16 text-muted-foreground/50" />
                 <div className="text-center">
                   <p className="text-lg font-medium">No files open</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Select a file from the sidebar to start editing
                   </p>
                 </div>

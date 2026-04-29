@@ -311,7 +311,7 @@ export const EnhancedCodeBlock: React.FC<EnhancedCodeBlockProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 transition-colors"
+                    className="h-7 w-7 p-0 text-primary hover:text-primary hover:bg-primary/10 transition-colors"
                     onClick={() => onInsert(children)}
                   >
                     <Insert className="h-3.5 w-3.5" />

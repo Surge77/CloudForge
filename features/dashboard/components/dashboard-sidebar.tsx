@@ -62,10 +62,13 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
   const [recentPlaygrounds] = useState(initialPlaygroundData)
 
   return (
-    <Sidebar variant="inset" collapsible="icon" className="border border-r">
+    <Sidebar variant="inset" collapsible="icon" className="border-r border-border/80 bg-sidebar">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-4 py-3 justify-center">
-          <Image src={"/logo.svg"} alt="logo" height={60} width={60} />
+        <div className="flex items-center justify-center gap-2 px-4 py-3">
+          <Image src={"/logo.svg"} alt="CloudForge logo" height={44} width={44} />
+          <span className="font-code text-sm font-semibold group-data-[collapsible=icon]:hidden">
+            CloudForge
+          </span>
         </div>
        
       </SidebarHeader>
@@ -104,7 +107,7 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
             <SidebarMenu>
 
               {starredPlaygrounds.length === 0 && recentPlaygrounds.length === 0 ? (
-                <div className="text-center text-muted-foreground py-4 w-full">Create your playground</div>
+                <div className="w-full rounded-md border border-dashed border-sidebar-border px-3 py-4 text-center text-xs text-muted-foreground">Create your playground</div>
               ) : (
                 starredPlaygrounds.map((playground) => {
                   const IconComponent = lucideIconMap[playground.icon] || Code2;

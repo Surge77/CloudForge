@@ -110,17 +110,17 @@ export function TemplateFileTree({
   }
 
   return (
-    <Sidebar>
+    <Sidebar className="border-r border-border/80 bg-sidebar">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{title}</SidebarGroupLabel>
+          <SidebarGroupLabel className="font-code uppercase tracking-wide">{title}</SidebarGroupLabel>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <SidebarGroupAction>
                 <Plus className="h-4 w-4" />
               </SidebarGroupAction>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="border-border/80 bg-popover/95 backdrop-blur-xl">
               <DropdownMenuItem onClick={handleAddRootFile}>
                 <FilePlus className="h-4 w-4 mr-2" />
                 New File
@@ -251,8 +251,8 @@ function TemplateNode({
     return (
       <SidebarMenuItem>
         <div className="flex items-center group">
-          <SidebarMenuButton isActive={isSelected} onClick={() => onFileSelect?.(file)} className="flex-1">
-            <File className="h-4 w-4 mr-2 shrink-0" />
+          <SidebarMenuButton isActive={isSelected} onClick={() => onFileSelect?.(file)} className="flex-1 font-code text-xs data-[active=true]:bg-primary/10 data-[active=true]:text-primary">
+            <File className="h-4 w-4 mr-2 shrink-0 text-muted-foreground" />
             <span>{fileName}</span>
           </SidebarMenuButton>
 
@@ -266,7 +266,7 @@ function TemplateNode({
                 <MoreHorizontal className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="border-border/80 bg-popover/95 backdrop-blur-xl">
               <DropdownMenuItem onClick={handleRename}>
                 <Edit3 className="h-4 w-4 mr-2" />
                 Rename
@@ -363,9 +363,9 @@ function TemplateNode({
         >
           <div className="flex items-center group">
             <CollapsibleTrigger asChild>
-              <SidebarMenuButton className="flex-1">
+              <SidebarMenuButton className="flex-1 font-code text-xs">
                 <ChevronRight className="transition-transform" />
-                <Folder className="h-4 w-4 mr-2 shrink-0" />
+                <Folder className="h-4 w-4 mr-2 shrink-0 text-primary" />
                 <span>{folderName}</span>
               </SidebarMenuButton>
             </CollapsibleTrigger>
@@ -380,7 +380,7 @@ function TemplateNode({
                   <MoreHorizontal className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="border-border/80 bg-popover/95 backdrop-blur-xl">
                 <DropdownMenuItem onClick={handleAddFile}>
                   <FilePlus className="h-4 w-4 mr-2" />
                   New File

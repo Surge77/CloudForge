@@ -167,51 +167,58 @@ export const PlaygroundEditor = ({
   const createInlineCompletionProvider = useCallback(
     (monaco: Monaco): Parameters<
       typeof monaco.languages.registerInlineCompletionsProvider
-    >[1] => ({
-      provideInlineCompletions: (
-        _model: unknown,
-        position: { lineNumber: number; column: number }
-      ) => {
-        if (
-          isAcceptingSuggestionRef.current ||
-          suggestionAcceptedRef.current ||
-          !suggestion ||
-          !suggestionPosition
-        ) {
-          return { items: [] };
-        }
+    >[1] => {
+      const provider: Parameters<
+        typeof monaco.languages.registerInlineCompletionsProvider
+      >[1] & { disposeInlineCompletions?: () => void } = {
+        provideInlineCompletions: (
+          _model: unknown,
+          position: { lineNumber: number; column: number }
+        ) => {
+          if (
+            isAcceptingSuggestionRef.current ||
+            suggestionAcceptedRef.current ||
+            !suggestion ||
+            !suggestionPosition
+          ) {
+            return { items: [] };
+          }
 
-        const isPositionMatch =
-          position.lineNumber === suggestionPosition.line &&
-          position.column >= suggestionPosition.column &&
-          position.column <= suggestionPosition.column + 2;
+          const isPositionMatch =
+            position.lineNumber === suggestionPosition.line &&
+            position.column >= suggestionPosition.column &&
+            position.column <= suggestionPosition.column + 2;
 
-        if (!isPositionMatch) {
-          return { items: [] };
-        }
+          if (!isPositionMatch) {
+            return { items: [] };
+          }
 
-        const cleanSuggestion = suggestion.replace(/\r/g, "");
-        currentSuggestionRef.current = {
-          text: cleanSuggestion,
-          position: suggestionPosition,
-        };
+          const cleanSuggestion = suggestion.replace(/\r/g, "");
+          currentSuggestionRef.current = {
+            text: cleanSuggestion,
+            position: suggestionPosition,
+          };
 
-        return {
-          items: [
-            {
-              insertText: cleanSuggestion,
-              range: new monaco.Range(
-                suggestionPosition.line,
-                suggestionPosition.column,
-                suggestionPosition.line,
-                suggestionPosition.column
-              ),
-            },
-          ],
-        };
-      },
-      freeInlineCompletions: () => {},
-    }),
+          return {
+            items: [
+              {
+                insertText: cleanSuggestion,
+                range: new monaco.Range(
+                  suggestionPosition.line,
+                  suggestionPosition.column,
+                  suggestionPosition.line,
+                  suggestionPosition.column
+                ),
+              },
+            ],
+          };
+        },
+        freeInlineCompletions: () => {},
+        disposeInlineCompletions: () => {},
+      };
+
+      return provider;
+    },
     [suggestion, suggestionPosition]
   );
 
@@ -433,14 +440,14 @@ export const PlaygroundEditor = ({
   return (
     <div className="h-full relative">
       {suggestionLoading && (
-        <div className="absolute top-2 right-2 z-10 bg-red-100 dark:bg-red-900 px-2 py-1 rounded text-xs text-red-700 dark:text-red-300 flex items-center gap-1">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-2 py-1 text-xs text-primary">
+          <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
           AI thinking...
         </div>
       )}
 
       {currentSuggestionRef.current && !suggestionLoading && (
-        <div className="absolute top-2 right-2 z-10 bg-green-100 dark:bg-green-900 px-2 py-1 rounded text-xs text-green-700 dark:text-green-300 flex items-center gap-1">
+        <div className="absolute top-2 right-2 z-10 bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 rounded text-xs text-emerald-500 flex items-center gap-1">
           <div className="w-2 h-2 bg-green-500 rounded-full" />
           Press Tab to accept
         </div>

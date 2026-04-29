@@ -62,7 +62,7 @@ export const EnhancedFilePreview: React.FC<EnhancedFilePreviewProps> = ({
     const ext = name.split(".").pop()?.toLowerCase()
 
     if (type === "image" || ["png", "jpg", "jpeg", "gif", "svg", "webp"].includes(ext || "")) {
-      return <ImageIcon className="h-4 w-4 text-blue-400" />
+      return <ImageIcon className="h-4 w-4 text-primary" />
     }
     if (type === "video" || ["mp4", "avi", "mov", "wmv", "flv"].includes(ext || "")) {
       return <Video className="h-4 w-4 text-purple-400" />
@@ -84,7 +84,7 @@ export const EnhancedFilePreview: React.FC<EnhancedFilePreviewProps> = ({
       case "code":
         return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
       case "image":
-        return "bg-blue-500/10 text-blue-400 border-blue-500/20"
+        return "bg-primary/10 text-primary border-primary/30"
       case "video":
         return "bg-purple-500/10 text-purple-400 border-purple-500/20"
       case "audio":
@@ -300,7 +300,7 @@ export const EnhancedFilePreview: React.FC<EnhancedFilePreviewProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => onInsert(file.content)}
-                  className="h-7 px-2 text-xs text-blue-400 hover:text-blue-300"
+                  className="h-7 px-2 text-xs text-primary hover:text-primary"
                 >
                   Insert
                 </Button>

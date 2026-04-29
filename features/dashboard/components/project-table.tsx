@@ -158,10 +158,10 @@ export default function ProjectTable({
 
   return (
     <>
-      <div className="border rounded-lg overflow-hidden">
+      <div className="forge-panel w-full overflow-hidden rounded-lg">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="border-border/70 bg-muted/30">
               <TableHead>Project</TableHead>
               <TableHead>Template</TableHead>
               <TableHead>Created</TableHead>
@@ -171,16 +171,16 @@ export default function ProjectTable({
           </TableHeader>
           <TableBody>
             {projects.map((project) => (
-              <TableRow key={project.id}>
+              <TableRow key={project.id} className="border-border/70 hover:bg-primary/5">
                 <TableCell className="font-medium">
                   <div className="flex flex-col">
                     <Link
                       href={`/playground/${project.id}`}
-                      className="hover:underline"
+                      className="transition-colors hover:text-primary"
                     >
                       <span className="font-semibold">{project.title}</span>
                     </Link>
-                    <span className="text-sm text-gray-500 line-clamp-1">
+                    <span className="line-clamp-1 text-sm text-muted-foreground">
                       {project.description}
                     </span>
                   </div>
@@ -188,7 +188,7 @@ export default function ProjectTable({
                 <TableCell>
                   <Badge
                     variant="outline"
-                    className="bg-[#E93F3F15] text-[#E93F3F] border-[#E93F3F]"
+                    className="border-primary/40 bg-primary/10 font-code text-primary"
                   >
                     {project.template}
                   </Badge>
@@ -198,7 +198,7 @@ export default function ProjectTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full overflow-hidden">
+                    <div className="w-8 h-8 rounded-full overflow-hidden border border-border/70">
                       <Image
                         src={project.user.image || "/placeholder.svg"}
                         alt={project.user.name || "Project owner"}
@@ -207,7 +207,7 @@ export default function ProjectTable({
                         className="object-cover"
                       />
                     </div>
-                    <span className="text-sm">{project.user.name}</span>
+                    <span className="text-sm text-muted-foreground">{project.user.name}</span>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -282,7 +282,7 @@ export default function ProjectTable({
 
       {/* Edit Project Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="forge-panel-strong sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Project</DialogTitle>
             <DialogDescription>
@@ -340,7 +340,7 @@ export default function ProjectTable({
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+          <AlertDialogContent className="forge-panel-strong">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>

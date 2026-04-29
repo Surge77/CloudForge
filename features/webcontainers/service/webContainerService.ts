@@ -1,4 +1,8 @@
 import { WebContainer } from '@webcontainer/api';
+import {
+  getWebContainerInstance,
+  teardownWebContainerInstance,
+} from '@/features/webcontainers/lib/webcontainer-singleton';
 
 type WebContainerFileSystem = Parameters<WebContainer['mount']>[0];
 type WebContainerProcess = Awaited<ReturnType<WebContainer['spawn']>>;
@@ -8,8 +12,6 @@ class WebContainerService {
   private static instance: WebContainerService | null = null;
   private webcontainerInstance: WebContainer | null = null;
   private mountPromise: Promise<void> | null = null;
-  private isBooting = false;
-  private bootPromise: Promise<WebContainer> | null = null;
   private activeUsers = 0;
 
   private constructor() {}
@@ -28,23 +30,11 @@ class WebContainerService {
       return this.webcontainerInstance;
     }
 
-    if (this.bootPromise) {
-      return this.bootPromise;
-    }
-
-    this.isBooting = true;
-    this.bootPromise = WebContainer.boot();
-    
     try {
-      this.webcontainerInstance = await this.bootPromise;
+      this.webcontainerInstance = await getWebContainerInstance();
       return this.webcontainerInstance;
     } catch (error) {
-      this.bootPromise = null;
-      this.isBooting = false;
       throw error;
-    } finally {
-      this.bootPromise = null;
-      this.isBooting = false;
     }
   }
 
@@ -65,20 +55,12 @@ class WebContainerService {
 
   public releaseInstance(): void {
     this.activeUsers--;
-    
-    // Only tear down if no components are using the instance
-    if (this.activeUsers <= 0) {
-      this.teardown();
-    }
   }
 
   public teardown(): void {
-    if (this.webcontainerInstance) {
-      this.webcontainerInstance.teardown();
-      this.webcontainerInstance = null;
-    }
+    teardownWebContainerInstance();
+    this.webcontainerInstance = null;
     this.mountPromise = null;
-    this.bootPromise = null;
     this.activeUsers = 0;
   }
 

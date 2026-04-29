@@ -1,16 +1,11 @@
 import SignInFormClient from '@/features/auth/components/sign-in-form-client'
-import Image from 'next/image'
 import React from 'react'
 
 const SignInPage = () => {
   return (
-    <>
-        <Image src={"/login.svg"} alt="Login-Image" height={300} 
-        width={300}
-        className='m-6 object-cover'
-        />
+    <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-6">
         <SignInFormClient/>
-    </>
+    </div>
   )
 }
 

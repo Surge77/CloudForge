@@ -75,7 +75,7 @@ export function getFileIcon(filePath: string): React.ReactNode {
       return (
         <FileCode
           {...iconProps}
-          className={`${iconProps.className} text-blue-500`}
+          className={`${iconProps.className} text-primary`}
         />
       );
     case "css":

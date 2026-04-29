@@ -53,174 +53,90 @@ export const getEditorLanguage = (fileExtension: string): string => {
 };
 
 export const configureMonaco = (monaco: Monaco) => {
-  // Define a beautiful modern dark theme
-  monaco.editor.defineTheme("modern-dark", {
+  monaco.editor.defineTheme("forge-console", {
     base: "vs-dark",
     inherit: true,
     rules: [
-      // Comments
-      { token: "comment", foreground: "7C7C7C", fontStyle: "italic" },
-      { token: "comment.line", foreground: "7C7C7C", fontStyle: "italic" },
-      { token: "comment.block", foreground: "7C7C7C", fontStyle: "italic" },
-      
-      // Keywords
-      { token: "keyword", foreground: "C586C0", fontStyle: "bold" },
-      { token: "keyword.control", foreground: "C586C0", fontStyle: "bold" },
-      { token: "keyword.operator", foreground: "D4D4D4" },
-      
-      // Strings
-      { token: "string", foreground: "CE9178" },
-      { token: "string.quoted", foreground: "CE9178" },
-      { token: "string.template", foreground: "CE9178" },
-      
-      // Numbers
-      { token: "number", foreground: "B5CEA8" },
-      { token: "number.hex", foreground: "B5CEA8" },
-      { token: "number.float", foreground: "B5CEA8" },
-      
-      // Functions
-      { token: "entity.name.function", foreground: "DCDCAA" },
-      { token: "support.function", foreground: "DCDCAA" },
-      
-      // Variables
-      { token: "variable", foreground: "9CDCFE" },
-      { token: "variable.parameter", foreground: "9CDCFE" },
-      { token: "variable.other", foreground: "9CDCFE" },
-      
-      // Types
-      { token: "entity.name.type", foreground: "4EC9B0" },
-      { token: "support.type", foreground: "4EC9B0" },
-      { token: "storage.type", foreground: "569CD6" },
-      
-      // Classes
-      { token: "entity.name.class", foreground: "4EC9B0" },
-      { token: "support.class", foreground: "4EC9B0" },
-      
-      // Constants
-      { token: "constant", foreground: "4FC1FF" },
-      { token: "constant.language", foreground: "569CD6" },
-      { token: "constant.numeric", foreground: "B5CEA8" },
-      
-      // Operators
-      { token: "keyword.operator", foreground: "D4D4D4" },
-      { token: "punctuation", foreground: "D4D4D4" },
-      
-      // HTML/XML
-      { token: "tag", foreground: "569CD6" },
-      { token: "tag.id", foreground: "9CDCFE" },
-      { token: "tag.class", foreground: "92C5F8" },
-      { token: "attribute.name", foreground: "9CDCFE" },
-      { token: "attribute.value", foreground: "CE9178" },
-      
-      // CSS
-      { token: "attribute.name.css", foreground: "9CDCFE" },
-      { token: "attribute.value.css", foreground: "CE9178" },
-      { token: "property-name.css", foreground: "9CDCFE" },
-      { token: "property-value.css", foreground: "CE9178" },
-      
-      // JSON
-      { token: "key", foreground: "9CDCFE" },
-      { token: "string.key", foreground: "9CDCFE" },
-      { token: "string.value", foreground: "CE9178" },
-      
-      // Error/Warning
-      { token: "invalid", foreground: "F44747", fontStyle: "underline" },
+      { token: "comment", foreground: "77716A", fontStyle: "italic" },
+      { token: "keyword", foreground: "FFB020", fontStyle: "bold" },
+      { token: "keyword.control", foreground: "FFB020", fontStyle: "bold" },
+      { token: "string", foreground: "F4A261" },
+      { token: "string.quoted", foreground: "F4A261" },
+      { token: "string.template", foreground: "F4A261" },
+      { token: "number", foreground: "7DDC91" },
+      { token: "entity.name.function", foreground: "FFD166" },
+      { token: "support.function", foreground: "FFD166" },
+      { token: "variable", foreground: "EDE5D8" },
+      { token: "variable.parameter", foreground: "FFD6A5" },
+      { token: "entity.name.type", foreground: "80ED99" },
+      { token: "support.type", foreground: "80ED99" },
+      { token: "storage.type", foreground: "FF8A3D" },
+      { token: "entity.name.class", foreground: "80ED99" },
+      { token: "constant", foreground: "FCA311" },
+      { token: "keyword.operator", foreground: "E8E0D4" },
+      { token: "punctuation", foreground: "E8E0D4" },
+      { token: "tag", foreground: "FF7A2F" },
+      { token: "attribute.name", foreground: "FFD166" },
+      { token: "attribute.value", foreground: "F4A261" },
+      { token: "key", foreground: "FFD166" },
+      { token: "string.key", foreground: "FFD166" },
+      { token: "invalid", foreground: "FF5C5C", fontStyle: "underline" },
       { token: "invalid.deprecated", foreground: "D4D4D4", fontStyle: "strikethrough" },
     ],
     colors: {
-      // Editor background
-      "editor.background": "#0D1117",
-      "editor.foreground": "#E6EDF3",
-      
-      // Line numbers
-      "editorLineNumber.foreground": "#7D8590",
-      "editorLineNumber.activeForeground": "#F0F6FC",
-      
-      // Cursor
-      "editorCursor.foreground": "#F0F6FC",
-      
-      // Selection
-      "editor.selectionBackground": "#264F78",
-      "editor.selectionHighlightBackground": "#ADD6FF26",
-      "editor.inactiveSelectionBackground": "#3A3D41",
-      
-      // Current line
-      "editor.lineHighlightBackground": "#21262D",
-      "editor.lineHighlightBorder": "#30363D",
-      
-      // Gutter
-      "editorGutter.background": "#0D1117",
-      "editorGutter.modifiedBackground": "#BB800966",
-      "editorGutter.addedBackground": "#347D3966",
-      "editorGutter.deletedBackground": "#F8514966",
-      
-      // Scrollbar
+      "editor.background": "#0B0B0C",
+      "editor.foreground": "#F4EFE7",
+      "editorLineNumber.foreground": "#5F5A54",
+      "editorLineNumber.activeForeground": "#FFB020",
+      "editorCursor.foreground": "#FF5A1F",
+      "editor.selectionBackground": "#FF5A1F33",
+      "editor.selectionHighlightBackground": "#FFB02022",
+      "editor.inactiveSelectionBackground": "#30241D",
+      "editor.lineHighlightBackground": "#171311",
+      "editor.lineHighlightBorder": "#2A211D",
+      "editorGutter.background": "#0B0B0C",
+      "editorGutter.modifiedBackground": "#FFB02088",
+      "editorGutter.addedBackground": "#22C55E88",
+      "editorGutter.deletedBackground": "#EF444488",
       "scrollbar.shadow": "#0008",
-      "scrollbarSlider.background": "#6E768166",
-      "scrollbarSlider.hoverBackground": "#6E768188",
-      "scrollbarSlider.activeBackground": "#6E7681BB",
-      
-      // Minimap
-      "minimap.background": "#161B22",
-      "minimap.selectionHighlight": "#264F78",
-      
-      // Find/Replace
-      "editor.findMatchBackground": "#9E6A03",
-      "editor.findMatchHighlightBackground": "#F2CC6080",
-      "editor.findRangeHighlightBackground": "#3FB95040",
-      
-      // Word highlight
-      "editor.wordHighlightBackground": "#575757B8",
-      "editor.wordHighlightStrongBackground": "#004972B8",
-      
-      // Brackets
-      "editorBracketMatch.background": "#0064001A",
-      "editorBracketMatch.border": "#888888",
-      
-      // Indentation guides
-      "editorIndentGuide.background": "#21262D",
-      "editorIndentGuide.activeBackground": "#30363D",
-      
-      // Ruler
-      "editorRuler.foreground": "#21262D",
-      
-      // Whitespace
-      "editorWhitespace.foreground": "#6E7681",
-      
-      // Error/Warning squiggles
-      "editorError.foreground": "#F85149",
-      "editorWarning.foreground": "#D29922",
-      "editorInfo.foreground": "#75BEFF",
-      "editorHint.foreground": "#EEEEEE",
-      
-      // Suggest widget
-      "editorSuggestWidget.background": "#161B22",
-      "editorSuggestWidget.border": "#30363D",
-      "editorSuggestWidget.foreground": "#E6EDF3",
-      "editorSuggestWidget.selectedBackground": "#21262D",
-      
-      // Hover widget
-      "editorHoverWidget.background": "#161B22",
-      "editorHoverWidget.border": "#30363D",
-      
-      // Panel
-      "panel.background": "#0D1117",
-      "panel.border": "#30363D",
-      
-      // Activity bar
-      "activityBar.background": "#0D1117",
-      "activityBar.foreground": "#E6EDF3",
-      "activityBar.border": "#30363D",
-      
-      // Side bar
-      "sideBar.background": "#0D1117",
-      "sideBar.foreground": "#E6EDF3",
-      "sideBar.border": "#30363D",
+      "scrollbarSlider.background": "#FF5A1F33",
+      "scrollbarSlider.hoverBackground": "#FF5A1F55",
+      "scrollbarSlider.activeBackground": "#FF5A1F77",
+      "minimap.background": "#111113",
+      "minimap.selectionHighlight": "#FF5A1F55",
+      "editor.findMatchBackground": "#FFB02066",
+      "editor.findMatchHighlightBackground": "#FFB02033",
+      "editor.findRangeHighlightBackground": "#22C55E30",
+      "editor.wordHighlightBackground": "#FF5A1F20",
+      "editor.wordHighlightStrongBackground": "#FF5A1F35",
+      "editorBracketMatch.background": "#FF5A1F1A",
+      "editorBracketMatch.border": "#FFB020",
+      "editorIndentGuide.background": "#241D19",
+      "editorIndentGuide.activeBackground": "#3B2B22",
+      "editorRuler.foreground": "#00000000",
+      "editorWhitespace.foreground": "#4B4540",
+      "editorError.foreground": "#FF5C5C",
+      "editorWarning.foreground": "#FFB020",
+      "editorInfo.foreground": "#FF8A3D",
+      "editorHint.foreground": "#F4EFE7",
+      "editorSuggestWidget.background": "#111113",
+      "editorSuggestWidget.border": "#3B2B22",
+      "editorSuggestWidget.foreground": "#F4EFE7",
+      "editorSuggestWidget.selectedBackground": "#2A211D",
+      "editorHoverWidget.background": "#111113",
+      "editorHoverWidget.border": "#3B2B22",
+      "panel.background": "#0B0B0C",
+      "panel.border": "#2A211D",
+      "activityBar.background": "#0B0B0C",
+      "activityBar.foreground": "#F4EFE7",
+      "activityBar.border": "#2A211D",
+      "sideBar.background": "#0B0B0C",
+      "sideBar.foreground": "#F4EFE7",
+      "sideBar.border": "#2A211D",
     },
   });
 
-  // Set the theme
-  monaco.editor.setTheme("modern-dark");
+  monaco.editor.setTheme("forge-console");
   
   // Configure additional editor settings
   monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
@@ -265,15 +181,13 @@ export const configureMonaco = (monaco: Monaco) => {
 export const defaultEditorOptions = {
   // Font settings
   fontSize: 14,
-  fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace",
+  fontFamily: "'Geist Mono', 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace",
   fontLigatures: true,
   fontWeight: "400",
   
   // Layout
   minimap: { 
-    enabled: true,
-    size: "proportional" as const,
-    showSlider: "mouseover" as const
+    enabled: false
   },
   scrollBeyondLastLine: false,
   automaticLayout: true,
@@ -335,7 +249,7 @@ export const defaultEditorOptions = {
   // Guides
   renderIndentGuides: true,
   highlightActiveIndentGuide: true,
-  rulers: [80, 120],
+  rulers: [],
   
   // Performance
   disableLayerHinting: false,

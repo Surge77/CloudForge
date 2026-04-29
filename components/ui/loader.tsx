@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { ForgeLoader } from "@/components/ui/forge-loader";
 
 interface LoadingStepProps {
   currentStep: number;
@@ -10,19 +10,19 @@ const LoadingStep: React.FC<LoadingStepProps> = ({
   step,
   label,
 }) => (
-  <div className="flex items-center gap-2 mb-2 justify-center h-screen">
+  <div className="mb-3 flex items-center justify-center gap-2">
     <div
       className={`rounded-full p-1 ${
         currentStep === step
-          ? "bg-red-100"
+          ? "bg-primary/15"
           : currentStep > step
-          ? "bg-green-100"
-          : "bg-gray-100"
+          ? "bg-emerald-500/15"
+          : "bg-muted"
       }`}
     >
       {currentStep > step ? (
         <svg
-          className="h-4 w-4 text-green-500"
+          className="h-4 w-4 text-emerald-500"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -35,18 +35,18 @@ const LoadingStep: React.FC<LoadingStepProps> = ({
           />
         </svg>
       ) : currentStep === step ? (
-        <Loader2 className="h-4 w-4 text-red-500 animate-spin" />
+        <ForgeLoader size="sm" />
       ) : (
-        <div className="h-4 w-4 rounded-full bg-gray-300" />
+        <div className="h-4 w-4 rounded-full bg-muted-foreground/30" />
       )}
     </div>
     <span
       className={`text-sm ${
         currentStep === step
-          ? "text-red-600 font-medium"
+          ? "text-primary font-medium"
           : currentStep > step
-          ? "text-green-600"
-          : "text-gray-500"
+          ? "text-emerald-500"
+          : "text-muted-foreground"
       }`}
     >
       {label}

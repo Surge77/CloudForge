@@ -12,9 +12,8 @@ export function Footer() {
   ];
 
   return (
-    <footer className="border-t border-zinc-200 dark:border-zinc-800">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 flex flex-col items-center space-y-6 text-center">
-        {/* Social Links */}
+    <footer className="relative z-20 border-t border-border/70 bg-background/80 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl flex-col items-center gap-5 px-4 py-8 text-center sm:px-6">
         <div className="flex gap-4">
           {socialLinks.map((link, index) => (
             <Link
@@ -28,9 +27,8 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Copyright Notice */}
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          &copy; {new Date().getFullYear()} CloudForge. All rights reserved.
+        <p className="font-code text-xs text-muted-foreground">
+          CloudForge runtime online / {new Date().getFullYear()} / all systems nominal
         </p>
       </div>
     </footer>

@@ -17,21 +17,32 @@ import { useCurrentUser } from "../hooks/use-current-user";
 const UserButton = () => {
 
   const user = useCurrentUser()
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="h-10 w-10 rounded-full border border-border/70 bg-muted" />
+    );
+  }
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
-        <div className={cn("relative rounded-full")}>
+      <DropdownMenuTrigger asChild>
+        <button className={cn("relative rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background")}>
           <Avatar>
             <AvatarImage src={user?.image || undefined} alt={user?.name || "User"} />
-            <AvatarFallback className="bg-red-500">
+            <AvatarFallback className="bg-primary">
               <User className="text-white" />
             </AvatarFallback>
           </Avatar>
-        </div>
+        </button>
       </DropdownMenuTrigger>
 
-    <DropdownMenuContent className="mr-4">
+    <DropdownMenuContent className="mr-4 border-border/80 bg-popover/95 backdrop-blur-xl">
       <DropdownMenuItem>
         <span>
           {user?.email}

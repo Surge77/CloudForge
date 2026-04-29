@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
-  Loader2,
   Send,
   User,
   Copy,
@@ -54,6 +53,7 @@ import {
 import { EnhancedCodeBlock } from "./ai-chat-code-blocks";
 import { EnhancedFilePreview } from "./file-preview";
 import "katex/dist/katex.min.css";
+import { ForgeLoader } from "@/components/ui/forge-loader";
 
 interface FileAttachment {
   id: string;
@@ -117,6 +117,7 @@ interface AIChatSidePanelProps {
   activeFileLanguage?: string;
   cursorPosition?: { line: number; column: number };
   theme?: "dark" | "light";
+  variant?: "drawer" | "panel";
 }
 
 const MessageTypeIndicator: React.FC<{
@@ -127,7 +128,7 @@ const MessageTypeIndicator: React.FC<{
   const getTypeConfig = (type?: string) => {
     switch (type) {
       case "code_review":
-        return { icon: Code, color: "text-blue-400", label: "Code Review" };
+        return { icon: Code, color: "text-primary", label: "Code Review" };
       case "suggestion":
         return {
           icon: Sparkles,
@@ -186,7 +187,7 @@ const CodeSuggestionCard: React.FC<{
       case "feature":
         return "bg-green-500/10 text-green-400 border-green-500/20";
       case "refactor":
-        return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+        return "bg-primary/10 text-primary border-primary/30";
       case "security":
         return "bg-purple-500/10 text-purple-400 border-purple-500/20";
       default:
@@ -283,7 +284,7 @@ const CodeSuggestionCard: React.FC<{
                   variant="ghost"
                   size="sm"
                   onClick={onInsert}
-                  className="h-7 px-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                  className="h-7 px-2 text-primary hover:text-primary hover:bg-primary/10"
                   disabled={!activeFileName}
                 >
                   <Plus className="h-3 w-3" />
@@ -324,6 +325,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
   activeFileLanguage,
   cursorPosition,
   theme = "dark",
+  variant = "drawer",
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -879,23 +881,30 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
       return msg.content.toLowerCase().includes(searchTerm.toLowerCase());
     });
 
+  if (!isOpen && variant === "panel") return null;
+
+  const isPanel = variant === "panel";
+
   return (
     <TooltipProvider>
       <>
-        {/* Backdrop */}
-        <div
-          className={cn(
-            "fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300",
-            isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-          )}
-          onClick={onClose}
-        />
+        {!isPanel && (
+          <div
+            className={cn(
+              "fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300",
+              isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}
+            onClick={onClose}
+          />
+        )}
 
-        {/* Side Panel */}
         <div
           className={cn(
-            "fixed right-0 top-0 h-full w-full max-w-6xl bg-zinc-950 border-l border-zinc-800 z-50 flex flex-col transition-transform duration-300 ease-out shadow-2xl",
-            isOpen ? "translate-x-0" : "translate-x-full"
+            "h-full w-full min-w-0 bg-zinc-950 border-l border-zinc-800 flex flex-col",
+            isPanel
+              ? "relative"
+              : "fixed right-0 top-0 max-w-6xl z-50 transition-transform duration-300 ease-out shadow-2xl",
+            !isPanel && (isOpen ? "translate-x-0" : "translate-x-full")
           )}
           onDrop={handleDrop}
           onDragOver={(e) => {
@@ -906,10 +915,10 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
         >
           {/* Drag overlay */}
           {dragOver && (
-            <div className="absolute inset-0 bg-blue-500/20 border-2 border-dashed border-blue-400 z-10 flex items-center justify-center">
+            <div className="absolute inset-0 bg-primary/20 border-2 border-dashed border-primary z-10 flex items-center justify-center">
               <div className="text-center">
-                <FileText className="h-12 w-12 text-blue-400 mx-auto mb-2" />
-                <p className="text-blue-400 font-medium">
+                <FileText className="h-12 w-12 text-primary mx-auto mb-2" />
+                <p className="text-primary font-medium">
                   Drop files here to attach
                 </p>
               </div>
@@ -918,16 +927,21 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
 
           {/* Enhanced Header */}
           <div className="shrink-0 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-sm">
-            <div className="flex items-center justify-between p-6">
-              <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10 border rounded-full flex flex-col justify-center items-center">
-                  <Image src={"/logo.svg"} alt="Logo" width={28} height={28} />
+            <div
+              className={cn(
+                "flex items-center justify-between gap-3",
+                isPanel ? "p-4" : "p-6"
+              )}
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-full border border-border/80">
+                  <Image src={"/logo.svg"} alt="Logo" width={24} height={24} />
                 </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-zinc-100">
+                <div className="min-w-0">
+                  <h2 className="truncate text-base font-semibold text-zinc-100">
                     Enhanced AI Assistant
                   </h2>
-                  <p className="text-sm text-zinc-400">
+                  <p className="truncate text-xs text-zinc-400">
                     {activeFileName
                       ? `Working on ${activeFileName}`
                       : "No active file"}{" "}
@@ -935,7 +949,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-1">
                 {activeFileName && (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -946,7 +960,9 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                         className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
                       >
                         <Plus className="h-4 w-4 mr-1" />
-                        Add Current File
+                        <span className={cn(isPanel && "sr-only")}>
+                          Add Current File
+                        </span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Add current file as context</TooltipContent>
@@ -960,7 +976,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                   className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
                 >
                   <Paperclip className="h-4 w-4 mr-1" />
-                  Attach
+                  <span className={cn(isPanel && "sr-only")}>Attach</span>
                 </Button>
 
                 <DropdownMenu>
@@ -1014,10 +1030,17 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
               onValueChange={(value) => {
                 if (isChatMode(value)) setChatMode(value);
               }}
-              className="px-6"
+              className={cn(isPanel ? "px-4" : "px-6")}
             >
-              <div className="flex items-center justify-between mb-4">
-                <TabsList className="grid w-full grid-cols-4 max-w-md">
+              <div
+                className={cn(
+                  "mb-4 flex gap-3",
+                  isPanel
+                    ? "flex-col"
+                    : "items-center justify-between"
+                )}
+              >
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="chat" className="flex items-center gap-1">
                     <MessageSquare className="h-3 w-3" />
                     Chat
@@ -1049,7 +1072,10 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                       placeholder="Search messages..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-7 h-8 w-40 bg-zinc-800/50 border-zinc-700/50"
+                      className={cn(
+                        "pl-7 h-8 bg-zinc-800/50 border-zinc-700/50",
+                        isPanel ? "w-full" : "w-40"
+                      )}
                     />
                   </div>
 
@@ -1284,7 +1310,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                     <Brain className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800/50 p-5 rounded-xl rounded-bl-md flex items-center gap-3">
-                    <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+                    <ForgeLoader size="sm" />
                     <span className="text-sm text-zinc-300">
                       {chatMode === "review"
                         ? "Analyzing code structure and patterns..."
@@ -1366,7 +1392,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                     }
                   }}
                   disabled={isLoading}
-                  className="min-h-[44px] max-h-32 bg-zinc-800/50 border-zinc-700/50 text-zinc-100 placeholder-zinc-500 focus:border-blue-500 focus:ring-blue-500/20 resize-none pr-20"
+                  className="min-h-[44px] max-h-32 bg-zinc-800/50 border-zinc-700/50 text-zinc-100 placeholder-zinc-500 focus:border-primary focus:ring-primary/20 resize-none pr-20"
                   rows={1}
                 />
                 <div className="absolute right-3 bottom-3 flex items-center gap-2">
@@ -1387,10 +1413,10 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
               <Button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="h-11 px-4 bg-blue-600 hover:bg-blue-700 text-white border-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="h-11 px-4 bg-primary hover:bg-primary/90 text-primary-foreground border-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <ForgeLoader size="sm" />
                 ) : (
                   <Send className="h-4 w-4" />
                 )}

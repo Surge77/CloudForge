@@ -1,21 +1,32 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { Toaster } from "@/components/ui/sonner";
 
-const poppins = Poppins({
+const geistSans = Geist({
   subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-geist-sans",
+});
 
-
-})
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+});
 
 export const metadata: Metadata = {
   title: "CloudForge",
   description: "CloudForge is a browser-based code editor that lets you write, debug, and run projects with AI assistance, live preview, and cloud persistence.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default async function RootLayout({
@@ -29,11 +40,11 @@ export default async function RootLayout({
     <SessionProvider session={session}>
     <html lang="en" suppressHydrationWarning>
       <body
-        className={` ${poppins.className} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <ThemeProvider
         attribute="class"
-        defaultTheme="system"
+        defaultTheme="dark"
         enableSystem
         disableTransitionOnChange
         >
