@@ -40,6 +40,9 @@ interface TerminalProps {
     command: string;
   }[];
   onClose?: () => void;
+  fontSize?: number;
+  fontFamily?: string;
+  scrollback?: number;
 }
 
 interface TerminalProcess {
@@ -125,6 +128,9 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
   webContainerInstance,
   quickCommands = [],
   onClose,
+  fontSize,
+  fontFamily,
+  scrollback,
 }, ref) => {
   const terminalRef = useRef<HTMLDivElement>(null);
   const term = useRef<Terminal | null>(null);
@@ -477,14 +483,14 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
 
     const terminal = new Terminal({
       cursorBlink: true,
-      fontFamily: '"Fira Code", "JetBrains Mono", "Consolas", monospace',
-      fontSize: 14,
+      fontFamily: fontFamily ?? '"Fira Code", "JetBrains Mono", "Consolas", monospace',
+      fontSize: fontSize ?? 14,
       lineHeight: 1.2,
       letterSpacing: 0,
       theme: terminalThemes[theme],
       allowTransparency: false,
       convertEol: true,
-      scrollback: 1000,
+      scrollback: scrollback ?? 1000,
       tabStopWidth: 4,
     });
 
@@ -607,6 +613,14 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
       writePrompt();
     }
   }, [webContainerInstance, writePrompt]);
+
+  useEffect(() => {
+    if (!term.current) return;
+    if (fontSize !== undefined) term.current.options.fontSize = fontSize;
+    if (fontFamily !== undefined) term.current.options.fontFamily = fontFamily;
+    if (scrollback !== undefined) term.current.options.scrollback = scrollback;
+    fitAddon.current?.fit();
+  }, [fontSize, fontFamily, scrollback]);
 
   const runCommandFromToolbar = useCallback(
     (command: string) => {

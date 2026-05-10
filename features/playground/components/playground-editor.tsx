@@ -9,7 +9,7 @@ import {
 } from "@/features/playground/libs/editor-config";
 import type { TemplateFile } from "@/features/playground/libs/path-to-json";
 import type { SuggestionEditor } from "@/features/playground/hooks/useAISuggestion";
-import { useEditorSettings } from "@/features/playground/stores/editor-settings-store";
+import { useEditorSettings, fontFamilyMap } from "@/features/playground/stores/editor-settings-store";
 
 interface PlaygroundEditorProps {
   activeFile: TemplateFile | undefined;
@@ -294,7 +294,9 @@ export const PlaygroundEditor = ({
 
     typedEditor.updateOptions({
       ...defaultEditorOptions,
+      fontFamily: fontFamilyMap[editorSettings.fontFamily],
       fontSize: editorSettings.fontSize,
+      lineHeight: editorSettings.lineHeight,
       tabSize: editorSettings.tabSize,
       wordWrap: editorSettings.wordWrap,
       lineNumbers: editorSettings.lineNumbers,
@@ -304,8 +306,14 @@ export const PlaygroundEditor = ({
       formatOnType: editorSettings.formatOnType,
       cursorBlinking: editorSettings.cursorBlinking,
       cursorStyle: editorSettings.cursorStyle,
+      cursorWidth: editorSettings.cursorWidth,
       renderWhitespace: editorSettings.renderWhitespace,
       stickyScroll: { enabled: editorSettings.stickyScroll },
+      smoothScrolling: editorSettings.smoothScrolling,
+      folding: editorSettings.folding,
+      bracketPairColorization: { enabled: editorSettings.bracketColorization },
+      mouseWheelZoom: editorSettings.mouseWheelZoom,
+      hover: { enabled: true, delay: editorSettings.hoverDelay, sticky: true },
       inlineSuggest: {
         enabled: true,
         mode: "prefix",
@@ -443,7 +451,9 @@ export const PlaygroundEditor = ({
   useEffect(() => {
     if (!editorRef.current) return;
     editorRef.current.updateOptions({
+      fontFamily: fontFamilyMap[editorSettings.fontFamily],
       fontSize: editorSettings.fontSize,
+      lineHeight: editorSettings.lineHeight,
       tabSize: editorSettings.tabSize,
       wordWrap: editorSettings.wordWrap,
       lineNumbers: editorSettings.lineNumbers,
@@ -453,8 +463,14 @@ export const PlaygroundEditor = ({
       formatOnType: editorSettings.formatOnType,
       cursorBlinking: editorSettings.cursorBlinking,
       cursorStyle: editorSettings.cursorStyle,
+      cursorWidth: editorSettings.cursorWidth,
       renderWhitespace: editorSettings.renderWhitespace,
       stickyScroll: { enabled: editorSettings.stickyScroll },
+      smoothScrolling: editorSettings.smoothScrolling,
+      folding: editorSettings.folding,
+      bracketPairColorization: { enabled: editorSettings.bracketColorization },
+      mouseWheelZoom: editorSettings.mouseWheelZoom,
+      hover: { enabled: true, delay: editorSettings.hoverDelay, sticky: true },
     });
   }, [editorSettings]);
 

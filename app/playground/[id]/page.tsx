@@ -66,6 +66,7 @@ import { findFilePath } from "@/features/playground/libs";
 import { getEditorLanguage } from "@/features/playground/libs/editor-config";
 import { ConfirmationDialog } from "@/features/playground/components/dialogs/conformation-dialog";
 import { SettingsDialog } from "@/features/playground/components/settings-dialog";
+import { useEditorSettings, fontFamilyMap } from "@/features/playground/stores/editor-settings-store";
 import { templateConfig } from "@/lib/template";
 
 const MainPlaygroundPage: React.FC = () => {
@@ -117,6 +118,7 @@ const MainPlaygroundPage: React.FC = () => {
 
   const lastSyncedContent = useRef<Map<string, string>>(new Map());
   const terminalRef = useRef<TerminalRef>(null);
+  const editorSettings = useEditorSettings();
 
   // Set template data when playground loads
   React.useEffect(() => {
@@ -823,6 +825,9 @@ const MainPlaygroundPage: React.FC = () => {
                           className="h-full rounded-none border-0"
                           quickCommands={terminalQuickCommands}
                           onClose={() => setIsTerminalVisible(false)}
+                          fontSize={editorSettings.fontSize}
+                          fontFamily={fontFamilyMap[editorSettings.fontFamily]}
+                          scrollback={editorSettings.terminalScrollback}
                         />
                       </ResizablePanel>
                     </ResizablePanelGroup>
