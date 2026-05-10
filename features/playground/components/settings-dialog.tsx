@@ -1,6 +1,11 @@
 "use client";
 
-import { useEditorSettings } from "@/features/playground/stores/editor-settings-store";
+import {
+  useEditorSettings,
+  fontFamilyLabels,
+  fontFamilyMap,
+  type FontFamily,
+} from "@/features/playground/stores/editor-settings-store";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +26,14 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Bot, Code2, RotateCcw, Palette, Keyboard } from "lucide-react";
+import {
+  Bot,
+  Code2,
+  RotateCcw,
+  Palette,
+  Keyboard,
+  Terminal,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 
 interface SettingsDialogProps {
@@ -62,8 +74,12 @@ const KEYBINDINGS = [
   { key: "Ctrl + H", action: "Find and replace" },
   { key: "Alt + ↑ / ↓", action: "Move line up / down" },
   { key: "Ctrl + D", action: "Select next occurrence" },
-  { key: "Ctrl + `", action: "Focus terminal" },
+  { key: "Ctrl + G", action: "Go to line" },
+  { key: "Ctrl + P", action: "Go to file (Monaco)" },
+  { key: "Ctrl + Shift + K", action: "Delete line" },
 ];
+
+const FONT_PREVIEW_TEXT = "const fn = () => 0 !== 1 && x => x + 1;";
 
 export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const settings = useEditorSettings();
@@ -71,67 +87,94 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[80vh] max-w-2xl overflow-hidden p-0">
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden p-0">
         <DialogHeader className="border-b border-border/80 px-6 py-4">
-          <DialogTitle className="flex items-center gap-2 text-base font-semibold">
-            Settings
-          </DialogTitle>
+          <DialogTitle className="text-base font-semibold">Settings</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="editor" className="flex h-[calc(80vh-73px)] flex-col">
-          <TabsList className="h-auto shrink-0 justify-start gap-0 rounded-none border-b border-border/80 bg-transparent px-6 py-0">
-            <TabsTrigger
-              value="editor"
-              className="gap-2 rounded-none border-b-2 border-transparent px-4 py-2.5 text-xs data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              <Code2 className="h-3.5 w-3.5" />
-              Editor
-            </TabsTrigger>
-            <TabsTrigger
-              value="ai"
-              className="gap-2 rounded-none border-b-2 border-transparent px-4 py-2.5 text-xs data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              <Bot className="h-3.5 w-3.5" />
-              AI
-            </TabsTrigger>
-            <TabsTrigger
-              value="appearance"
-              className="gap-2 rounded-none border-b-2 border-transparent px-4 py-2.5 text-xs data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              <Palette className="h-3.5 w-3.5" />
-              Appearance
-            </TabsTrigger>
-            <TabsTrigger
-              value="keybindings"
-              className="gap-2 rounded-none border-b-2 border-transparent px-4 py-2.5 text-xs data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              <Keyboard className="h-3.5 w-3.5" />
-              Keybindings
-            </TabsTrigger>
+        <Tabs defaultValue="editor" className="flex h-[calc(85vh-73px)] flex-col">
+          <TabsList className="h-auto shrink-0 justify-start gap-0 rounded-none border-b border-border/80 bg-transparent px-4 py-0">
+            {[
+              { value: "editor", icon: Code2, label: "Editor" },
+              { value: "terminal", icon: Terminal, label: "Terminal" },
+              { value: "ai", icon: Bot, label: "AI" },
+              { value: "appearance", icon: Palette, label: "Appearance" },
+              { value: "keybindings", icon: Keyboard, label: "Keybindings" },
+            ].map(({ value, icon: Icon, label }) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2.5 text-xs data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          {/* Editor Tab */}
+          {/* ── EDITOR TAB ── */}
           <TabsContent value="editor" className="mt-0 flex-1 overflow-y-auto px-6">
             <div className="divide-y divide-border/50">
-              <SettingRow
-                label="Font Size"
-                description={`Current: ${settings.fontSize}px`}
-              >
-                <div className="flex w-40 items-center gap-3">
+
+              {/* Font family */}
+              <SettingRow label="Font Family" description="Monospace font used in the editor">
+                <Select
+                  value={settings.fontFamily}
+                  onValueChange={(v) => settings.update({ fontFamily: v as FontFamily })}
+                >
+                  <SelectTrigger className="h-8 w-40 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(fontFamilyLabels) as FontFamily[]).map((key) => (
+                      <SelectItem key={key} value={key}>
+                        <span style={{ fontFamily: fontFamilyMap[key] }}>
+                          {fontFamilyLabels[key]}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </SettingRow>
+
+              {/* Font preview */}
+              <div className="py-3">
+                <p className="mb-2 text-xs text-muted-foreground">Font preview</p>
+                <div
+                  className="rounded-md border border-border/60 bg-muted/30 px-4 py-3 text-sm text-foreground"
+                  style={{ fontFamily: fontFamilyMap[settings.fontFamily], fontSize: settings.fontSize }}
+                >
+                  {FONT_PREVIEW_TEXT}
+                </div>
+              </div>
+
+              {/* Font size */}
+              <SettingRow label="Font Size" description={`${settings.fontSize}px`}>
+                <div className="flex w-44 items-center gap-3">
                   <Slider
-                    min={10}
-                    max={24}
-                    step={1}
+                    min={10} max={24} step={1}
                     value={[settings.fontSize]}
-                    onValueChange={([value]) => settings.update({ fontSize: value })}
+                    onValueChange={([v]) => settings.update({ fontSize: v })}
                     className="flex-1"
                   />
-                  <span className="w-6 text-right font-code text-xs text-muted-foreground">
-                    {settings.fontSize}
-                  </span>
+                  <span className="w-6 text-right font-code text-xs text-muted-foreground">{settings.fontSize}</span>
                 </div>
               </SettingRow>
 
+              {/* Line height */}
+              <SettingRow label="Line Height" description={`${settings.lineHeight}px`}>
+                <div className="flex w-44 items-center gap-3">
+                  <Slider
+                    min={16} max={30} step={1}
+                    value={[settings.lineHeight]}
+                    onValueChange={([v]) => settings.update({ lineHeight: v })}
+                    className="flex-1"
+                  />
+                  <span className="w-6 text-right font-code text-xs text-muted-foreground">{settings.lineHeight}</span>
+                </div>
+              </SettingRow>
+
+              {/* Tab size */}
               <SettingRow label="Tab Size" description="Spaces per indent level">
                 <Select
                   value={String(settings.tabSize)}
@@ -148,6 +191,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                 </Select>
               </SettingRow>
 
+              {/* Word wrap */}
               <SettingRow label="Word Wrap" description="Wrap long lines at editor width">
                 <Switch
                   checked={settings.wordWrap === "on"}
@@ -155,12 +199,11 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                 />
               </SettingRow>
 
-              <SettingRow label="Line Numbers" description="Show line numbers in gutter">
+              {/* Line numbers */}
+              <SettingRow label="Line Numbers">
                 <Select
                   value={settings.lineNumbers}
-                  onValueChange={(v) =>
-                    settings.update({ lineNumbers: v as "on" | "off" | "relative" })
-                  }
+                  onValueChange={(v) => settings.update({ lineNumbers: v as "on" | "off" | "relative" })}
                 >
                   <SelectTrigger className="h-8 w-24 text-xs">
                     <SelectValue />
@@ -173,13 +216,15 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                 </Select>
               </SettingRow>
 
-              <SettingRow label="Minimap" description="Show file overview on scrollbar">
+              {/* Minimap */}
+              <SettingRow label="Minimap" description="File overview on scrollbar">
                 <Switch
                   checked={settings.minimap}
                   onCheckedChange={(v) => settings.update({ minimap: v })}
                 />
               </SettingRow>
 
+              {/* Font ligatures */}
               <SettingRow label="Font Ligatures" description="Render coding ligatures (→ ≠ ===)">
                 <Switch
                   checked={settings.fontLigatures}
@@ -187,26 +232,11 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                 />
               </SettingRow>
 
-              <SettingRow label="Format on Paste" description="Auto-format pasted code">
-                <Switch
-                  checked={settings.formatOnPaste}
-                  onCheckedChange={(v) => settings.update({ formatOnPaste: v })}
-                />
-              </SettingRow>
-
-              <SettingRow label="Format on Type" description="Auto-format while typing">
-                <Switch
-                  checked={settings.formatOnType}
-                  onCheckedChange={(v) => settings.update({ formatOnType: v })}
-                />
-              </SettingRow>
-
+              {/* Cursor style */}
               <SettingRow label="Cursor Style">
                 <Select
                   value={settings.cursorStyle}
-                  onValueChange={(v) =>
-                    settings.update({ cursorStyle: v as "line" | "block" | "underline" })
-                  }
+                  onValueChange={(v) => settings.update({ cursorStyle: v as "line" | "block" | "underline" })}
                 >
                   <SelectTrigger className="h-8 w-28 text-xs">
                     <SelectValue />
@@ -219,50 +249,86 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                 </Select>
               </SettingRow>
 
+              {/* Cursor width */}
+              <SettingRow label="Cursor Width" description={`${settings.cursorWidth}px (line cursor only)`}>
+                <div className="flex w-44 items-center gap-3">
+                  <Slider
+                    min={1} max={5} step={1}
+                    value={[settings.cursorWidth]}
+                    onValueChange={([v]) => settings.update({ cursorWidth: v })}
+                    className="flex-1"
+                  />
+                  <span className="w-4 text-right font-code text-xs text-muted-foreground">{settings.cursorWidth}</span>
+                </div>
+              </SettingRow>
+
+              {/* Cursor blinking */}
               <SettingRow label="Cursor Animation">
                 <Select
                   value={settings.cursorBlinking}
-                  onValueChange={(v) =>
-                    settings.update({
-                      cursorBlinking: v as "blink" | "smooth" | "phase" | "expand" | "solid",
-                    })
-                  }
+                  onValueChange={(v) => settings.update({ cursorBlinking: v as EditorSettings["cursorBlinking"] })}
                 >
                   <SelectTrigger className="h-8 w-28 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="blink">Blink</SelectItem>
-                    <SelectItem value="smooth">Smooth</SelectItem>
-                    <SelectItem value="phase">Phase</SelectItem>
-                    <SelectItem value="expand">Expand</SelectItem>
-                    <SelectItem value="solid">Solid</SelectItem>
+                    {["blink", "smooth", "phase", "expand", "solid"].map((v) => (
+                      <SelectItem key={v} value={v} className="capitalize">{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </SettingRow>
 
+              {/* Render whitespace */}
               <SettingRow label="Render Whitespace" description="Show whitespace characters">
                 <Select
                   value={settings.renderWhitespace}
-                  onValueChange={(v) =>
-                    settings.update({
-                      renderWhitespace: v as "none" | "boundary" | "selection" | "trailing" | "all",
-                    })
-                  }
+                  onValueChange={(v) => settings.update({ renderWhitespace: v as EditorSettings["renderWhitespace"] })}
                 >
                   <SelectTrigger className="h-8 w-28 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="selection">Selection</SelectItem>
-                    <SelectItem value="boundary">Boundary</SelectItem>
-                    <SelectItem value="trailing">Trailing</SelectItem>
-                    <SelectItem value="all">All</SelectItem>
+                    {["none", "selection", "boundary", "trailing", "all"].map((v) => (
+                      <SelectItem key={v} value={v} className="capitalize">{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </SettingRow>
 
+              {/* Format on paste */}
+              <SettingRow label="Format on Paste">
+                <Switch
+                  checked={settings.formatOnPaste}
+                  onCheckedChange={(v) => settings.update({ formatOnPaste: v })}
+                />
+              </SettingRow>
+
+              {/* Format on type */}
+              <SettingRow label="Format on Type">
+                <Switch
+                  checked={settings.formatOnType}
+                  onCheckedChange={(v) => settings.update({ formatOnType: v })}
+                />
+              </SettingRow>
+
+              {/* Folding */}
+              <SettingRow label="Code Folding" description="Collapse regions and functions">
+                <Switch
+                  checked={settings.folding}
+                  onCheckedChange={(v) => settings.update({ folding: v })}
+                />
+              </SettingRow>
+
+              {/* Bracket colorization */}
+              <SettingRow label="Bracket Colorization" description="Color-match bracket pairs">
+                <Switch
+                  checked={settings.bracketColorization}
+                  onCheckedChange={(v) => settings.update({ bracketColorization: v })}
+                />
+              </SettingRow>
+
+              {/* Sticky scroll */}
               <SettingRow label="Sticky Scroll" description="Pin scope headers while scrolling">
                 <Switch
                   checked={settings.stickyScroll}
@@ -270,13 +336,37 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                 />
               </SettingRow>
 
+              {/* Smooth scrolling */}
+              <SettingRow label="Smooth Scrolling" description="Animate scroll movements">
+                <Switch
+                  checked={settings.smoothScrolling}
+                  onCheckedChange={(v) => settings.update({ smoothScrolling: v })}
+                />
+              </SettingRow>
+
+              {/* Mouse wheel zoom */}
+              <SettingRow label="Mouse Wheel Zoom" description="Ctrl + scroll to zoom font size">
+                <Switch
+                  checked={settings.mouseWheelZoom}
+                  onCheckedChange={(v) => settings.update({ mouseWheelZoom: v })}
+                />
+              </SettingRow>
+
+              {/* Hover delay */}
+              <SettingRow label="Hover Tooltip Delay" description={`${settings.hoverDelay}ms before tooltip appears`}>
+                <div className="flex w-44 items-center gap-3">
+                  <Slider
+                    min={100} max={1000} step={50}
+                    value={[settings.hoverDelay]}
+                    onValueChange={([v]) => settings.update({ hoverDelay: v })}
+                    className="flex-1"
+                  />
+                  <span className="w-8 text-right font-code text-xs text-muted-foreground">{settings.hoverDelay}</span>
+                </div>
+              </SettingRow>
+
               <div className="py-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 text-xs"
-                  onClick={settings.reset}
-                >
+                <Button variant="outline" size="sm" className="gap-2 text-xs" onClick={settings.reset}>
                   <RotateCcw className="h-3.5 w-3.5" />
                   Reset to defaults
                 </Button>
@@ -284,7 +374,58 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             </div>
           </TabsContent>
 
-          {/* AI Tab */}
+          {/* ── TERMINAL TAB ── */}
+          <TabsContent value="terminal" className="mt-0 flex-1 overflow-y-auto px-6">
+            <div className="divide-y divide-border/50">
+
+              <SettingRow label="Font Size" description="Syncs with editor font size setting">
+                <Badge variant="secondary" className="font-code text-xs">
+                  {settings.fontSize}px
+                </Badge>
+              </SettingRow>
+
+              <SettingRow label="Font Family" description="Syncs with editor font family setting">
+                <Badge variant="secondary" className="font-code text-xs">
+                  {fontFamilyLabels[settings.fontFamily]}
+                </Badge>
+              </SettingRow>
+
+              <SettingRow
+                label="Scrollback Lines"
+                description={`Keep ${settings.terminalScrollback.toLocaleString()} lines of history`}
+              >
+                <div className="flex w-44 items-center gap-3">
+                  <Slider
+                    min={500} max={10000} step={500}
+                    value={[settings.terminalScrollback]}
+                    onValueChange={([v]) => settings.update({ terminalScrollback: v })}
+                    className="flex-1"
+                  />
+                  <span className="w-10 text-right font-code text-xs text-muted-foreground">
+                    {settings.terminalScrollback >= 1000
+                      ? `${settings.terminalScrollback / 1000}k`
+                      : settings.terminalScrollback}
+                  </span>
+                </div>
+              </SettingRow>
+
+              <SettingRow label="Theme" description="Follows app theme (dark/light)">
+                <Badge variant="secondary" className="text-xs capitalize">
+                  {theme ?? "dark"}
+                </Badge>
+              </SettingRow>
+
+              <div className="py-4">
+                <div className="rounded-lg border border-border/60 bg-muted/20 px-4 py-3">
+                  <p className="text-xs text-muted-foreground">
+                    Terminal font and theme automatically follow editor settings. Change Font Family or Font Size in the Editor tab to update both panels simultaneously.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* ── AI TAB ── */}
           <TabsContent value="ai" className="mt-0 flex-1 overflow-y-auto px-6">
             <div className="divide-y divide-border/50">
               <SettingRow
@@ -298,41 +439,35 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
               </SettingRow>
 
               <div className="py-4 space-y-4">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Active Models
-                </p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Active Models</p>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/30 px-4 py-3">
-                    <div>
-                      <p className="text-sm font-medium">Inline Suggestions</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Fast completions triggered as you type
-                      </p>
+                  {[
+                    {
+                      label: "Inline Suggestions",
+                      desc: "Fast completions triggered as you type",
+                      model: "llama-3.1-8b-instant",
+                    },
+                    {
+                      label: "AI Chat Assistant",
+                      desc: "Review, fix, optimize, and explain code",
+                      model: "llama-3.3-70b-versatile",
+                    },
+                  ].map(({ label, desc, model }) => (
+                    <div
+                      key={label}
+                      className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/30 px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant="secondary" className="font-code text-xs">{model}</Badge>
+                        <p className="mt-1 text-xs text-muted-foreground">via Groq</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <Badge variant="secondary" className="font-code text-xs">
-                        llama-3.1-8b-instant
-                      </Badge>
-                      <p className="mt-1 text-xs text-muted-foreground">via Groq</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/30 px-4 py-3">
-                    <div>
-                      <p className="text-sm font-medium">AI Chat Assistant</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Review, fix, optimize, and explain code
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="secondary" className="font-code text-xs">
-                        llama-3.3-70b-versatile
-                      </Badge>
-                      <p className="mt-1 text-xs text-muted-foreground">via Groq</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-
                 <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
                   <p className="text-xs text-primary font-medium">Free tier active</p>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -343,7 +478,7 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             </div>
           </TabsContent>
 
-          {/* Appearance Tab */}
+          {/* ── APPEARANCE TAB ── */}
           <TabsContent value="appearance" className="mt-0 flex-1 overflow-y-auto px-6">
             <div className="divide-y divide-border/50">
               <SettingRow label="Theme" description="Editor and UI color scheme">
@@ -363,26 +498,39 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
               </SettingRow>
 
               <div className="py-4 space-y-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Editor Theme
-                </p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Editor Theme</p>
                 <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
                   <div>
                     <p className="text-sm font-medium">Forge Console</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Custom dark theme — warm amber on deep black
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Custom dark — warm amber on deep black</p>
                   </div>
                   <Badge className="text-xs">Active</Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Additional editor themes coming soon.
-                </p>
+                <p className="text-xs text-muted-foreground">Additional editor themes coming soon.</p>
+              </div>
+
+              <div className="py-4 space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Current Font</p>
+                <div className="rounded-lg border border-border/60 bg-muted/20 px-4 py-4">
+                  <p className="text-xs text-muted-foreground mb-2">{fontFamilyLabels[settings.fontFamily]} · {settings.fontSize}px · lh {settings.lineHeight}</p>
+                  <p
+                    className="text-sm text-foreground"
+                    style={{ fontFamily: fontFamilyMap[settings.fontFamily], fontSize: settings.fontSize, lineHeight: `${settings.lineHeight}px` }}
+                  >
+                    {FONT_PREVIEW_TEXT}
+                  </p>
+                  <p
+                    className="mt-1 text-sm text-muted-foreground"
+                    style={{ fontFamily: fontFamilyMap[settings.fontFamily], fontSize: settings.fontSize, lineHeight: `${settings.lineHeight}px` }}
+                  >
+                    0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ
+                  </p>
+                </div>
               </div>
             </div>
           </TabsContent>
 
-          {/* Keybindings Tab */}
+          {/* ── KEYBINDINGS TAB ── */}
           <TabsContent value="keybindings" className="mt-0 flex-1 overflow-y-auto px-6">
             <div className="py-4 space-y-1">
               {KEYBINDINGS.map(({ key, action }) => (
@@ -391,14 +539,12 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                   className="flex items-center justify-between rounded-md px-3 py-2.5 hover:bg-muted/40"
                 >
                   <span className="text-sm text-muted-foreground">{action}</span>
-                  <kbd className="font-code rounded border border-border/70 bg-muted px-2 py-1 text-xs">
-                    {key}
-                  </kbd>
+                  <kbd className="font-code rounded border border-border/70 bg-muted px-2 py-1 text-xs">{key}</kbd>
                 </div>
               ))}
               <Separator className="my-3" />
               <p className="px-3 text-xs text-muted-foreground">
-                Monaco editor standard keybindings also apply (Ctrl+G go to line, etc.)
+                Monaco editor standard keybindings also apply.
               </p>
             </div>
           </TabsContent>
@@ -407,3 +553,6 @@ export const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     </Dialog>
   );
 };
+
+// Re-export type for use in other files
+type EditorSettings = import("@/features/playground/stores/editor-settings-store").EditorSettings;
