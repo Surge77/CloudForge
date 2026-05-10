@@ -285,7 +285,7 @@ export const PlaygroundEditor = ({
   }, [activeFile]);
 
   const handleEditorDidMount = (
-    editor: MonacoCodeEditor,
+    editor: unknown,
     monaco: Monaco
   ) => {
     const typedEditor = editor as MonacoCodeEditor;
