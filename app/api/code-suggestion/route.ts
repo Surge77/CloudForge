@@ -128,53 +128,49 @@ Generate suggestion:`
 }
 
 /**
- * Generate suggestion using AI service
+ * Generate suggestion using Groq API
  */
 async function generateSuggestion(prompt: string): Promise<string> {
-  const baseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434"
-  const model = process.env.OLLAMA_MODEL || "codellama:latest"
-  const timeoutMs = Number(process.env.AI_REQUEST_TIMEOUT_MS || 30000)
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  const apiKey = process.env.GROQ_API_KEY
+  const model = process.env.GROQ_SUGGESTION_MODEL || "llama-3.1-8b-instant"
+
+  if (!apiKey) {
+    return "// AI suggestion unavailable"
+  }
 
   try {
-    const response = await fetch(`${baseUrl}/api/generate`, {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
       body: JSON.stringify({
         model,
-        prompt,
-        stream: false,
-        options: {
-          temperature: 0.7,
-          max_tokens: 300,
-        },
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 300,
+        temperature: 0.7,
       }),
     })
 
     if (!response.ok) {
-      throw new Error(`AI service error: ${response.statusText}`)
+      throw new Error(`Groq API error: ${response.statusText}`)
     }
 
     const data = await response.json()
-    let suggestion = data.response
+    let suggestion: string = data.choices?.[0]?.message?.content || ""
 
-    // Clean up the suggestion
     if (suggestion.includes("```")) {
       const codeMatch = suggestion.match(/```[\w]*\n?([\s\S]*?)```/)
       suggestion = codeMatch ? codeMatch[1].trim() : suggestion
     }
 
-    // Remove cursor markers if present
     suggestion = suggestion.replace(/\|CURSOR\|/g, "").trim()
 
     return suggestion || "// AI suggestion unavailable"
   } catch (error) {
     console.error("AI generation error:", error)
     return "// AI suggestion unavailable"
-  } finally {
-    clearTimeout(timeout)
   }
 }
 

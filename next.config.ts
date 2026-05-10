@@ -17,9 +17,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Include Prisma Query Engine in serverless functions
+  // Include Prisma engine + template starter files in serverless functions
   outputFileTracingIncludes: {
-    '/api/**/*': ['./node_modules/.prisma/**/*'],
+    '/api/**/*': ['./node_modules/.prisma/**/*', './cloudforge-starters/**/*'],
     '/auth/**/*': ['./node_modules/.prisma/**/*'],
   },
   async headers() {
@@ -41,7 +41,6 @@ const nextConfig: NextConfig = {
     ];
   },
   reactStrictMode: true,
-  output: 'standalone', // Required for Docker
 };
 
 export default nextConfig;

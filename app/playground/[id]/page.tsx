@@ -65,6 +65,7 @@ import { useWebContainer } from "@/features/webcontainers/hooks/useWebContainer"
 import { findFilePath } from "@/features/playground/libs";
 import { getEditorLanguage } from "@/features/playground/libs/editor-config";
 import { ConfirmationDialog } from "@/features/playground/components/dialogs/conformation-dialog";
+import { SettingsDialog } from "@/features/playground/components/settings-dialog";
 import { templateConfig } from "@/lib/template";
 
 const MainPlaygroundPage: React.FC = () => {
@@ -82,6 +83,7 @@ const MainPlaygroundPage: React.FC = () => {
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [isTerminalVisible, setIsTerminalVisible] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Custom hooks
   const { playgroundData, templateData, isLoading, error, saveTemplateData } =
@@ -376,9 +378,31 @@ const MainPlaygroundPage: React.FC = () => {
   );
 
   const handleRunCodeFromAI = useCallback((code: string, language: string) => {
-    void code;
-    void language;
-    toast.info("Code run requests are queued for terminal integration");
+    if (!terminalRef.current) {
+      toast.error("Open the terminal first");
+      return;
+    }
+
+    setIsTerminalVisible(true);
+
+    const lang = language.toLowerCase();
+    let command: string | null = null;
+
+    if (lang === "javascript" || lang === "js") {
+      const escaped = code.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
+      command = `node -e "${escaped}"`;
+    } else if (lang === "typescript" || lang === "ts") {
+      const escaped = code.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
+      command = `npx tsx -e "${escaped}"`;
+    } else {
+      navigator.clipboard.writeText(code).catch(() => {});
+      toast.info("Code copied — paste in terminal to run");
+      return;
+    }
+
+    setTimeout(() => {
+      terminalRef.current?.runCommand(command!);
+    }, 150);
   }, []);
 
   // Add event to save file by click ctrl + s
@@ -636,30 +660,19 @@ const MainPlaygroundPage: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="icon-sm" variant="ghost" aria-label="Layout settings">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => setIsSettingsOpen(true)}
+                    aria-label="Open settings"
+                  >
                     <Settings className="h-4 w-4" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => setIsPreviewVisible((value) => !value)}
-                  >
-                    {isPreviewVisible ? "Close" : "Open"} Output Panel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setIsTerminalVisible((value) => !value)}
-                  >
-                    {isTerminalVisible ? "Hide" : "Show"} Terminal
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setIsAIChatOpen((value) => !value)}
-                  >
-                    {isAIChatOpen ? "Close" : "Open"} AI Assistant
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </TooltipTrigger>
+                <TooltipContent>Settings</TooltipContent>
+              </Tooltip>
             </div>
           </header>
 
@@ -918,6 +931,7 @@ const MainPlaygroundPage: React.FC = () => {
       onCancel={confirmationDialog.onCancel}
       setIsOpen={(open) => setConfirmationDialog((prev) => ({ ...prev, isOpen: open }))}
       />
+      <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
       </>
     </TooltipProvider>
   );

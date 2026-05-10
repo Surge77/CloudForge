@@ -9,6 +9,7 @@ import {
 } from "@/features/playground/libs/editor-config";
 import type { TemplateFile } from "@/features/playground/libs/path-to-json";
 import type { SuggestionEditor } from "@/features/playground/hooks/useAISuggestion";
+import { useEditorSettings } from "@/features/playground/stores/editor-settings-store";
 
 interface PlaygroundEditorProps {
   activeFile: TemplateFile | undefined;
@@ -65,6 +66,7 @@ export const PlaygroundEditor = ({
   onRejectSuggestion,
   onTriggerSuggestion,
 }: PlaygroundEditorProps) => {
+  const editorSettings = useEditorSettings();
   const editorRef = useRef<MonacoCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
   const inlineCompletionProviderRef = useRef<Disposable | null>(null);
@@ -292,6 +294,18 @@ export const PlaygroundEditor = ({
 
     typedEditor.updateOptions({
       ...defaultEditorOptions,
+      fontSize: editorSettings.fontSize,
+      tabSize: editorSettings.tabSize,
+      wordWrap: editorSettings.wordWrap,
+      lineNumbers: editorSettings.lineNumbers,
+      minimap: { enabled: editorSettings.minimap },
+      fontLigatures: editorSettings.fontLigatures,
+      formatOnPaste: editorSettings.formatOnPaste,
+      formatOnType: editorSettings.formatOnType,
+      cursorBlinking: editorSettings.cursorBlinking,
+      cursorStyle: editorSettings.cursorStyle,
+      renderWhitespace: editorSettings.renderWhitespace,
+      stickyScroll: { enabled: editorSettings.stickyScroll },
       inlineSuggest: {
         enabled: true,
         mode: "prefix",
@@ -360,7 +374,7 @@ export const PlaygroundEditor = ({
         }
       }
 
-      if (!currentSuggestionRef.current && !suggestionLoading) {
+      if (!currentSuggestionRef.current && !suggestionLoading && editorSettings.aiSuggestions) {
         if (suggestionTimeoutRef.current) {
           clearTimeout(suggestionTimeoutRef.current);
         }
@@ -425,6 +439,24 @@ export const PlaygroundEditor = ({
   useEffect(() => {
     updateEditorLanguage();
   }, [updateEditorLanguage]);
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+    editorRef.current.updateOptions({
+      fontSize: editorSettings.fontSize,
+      tabSize: editorSettings.tabSize,
+      wordWrap: editorSettings.wordWrap,
+      lineNumbers: editorSettings.lineNumbers,
+      minimap: { enabled: editorSettings.minimap },
+      fontLigatures: editorSettings.fontLigatures,
+      formatOnPaste: editorSettings.formatOnPaste,
+      formatOnType: editorSettings.formatOnType,
+      cursorBlinking: editorSettings.cursorBlinking,
+      cursorStyle: editorSettings.cursorStyle,
+      renderWhitespace: editorSettings.renderWhitespace,
+      stickyScroll: { enabled: editorSettings.stickyScroll },
+    });
+  }, [editorSettings]);
 
   useEffect(() => {
     return () => {
