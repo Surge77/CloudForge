@@ -64,9 +64,9 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
   return (
     <Sidebar variant="inset" collapsible="icon" className="border-r border-border/80 bg-sidebar">
       <SidebarHeader>
-        <div className="flex items-center justify-center gap-2 px-4 py-3">
-          <Image src={"/logo.svg"} alt="CloudForge logo" height={44} width={44} />
-          <span className="font-code text-sm font-semibold group-data-[collapsible=icon]:hidden">
+        <div className="flex items-center justify-center gap-2.5 px-4 py-3">
+          <Image src={"/logo.svg"} alt="CloudForge logo" height={40} width={40} className="rounded-[10px]" />
+          <span className="font-display text-lg font-medium italic tracking-tight group-data-[collapsible=icon]:hidden">
             CloudForge
           </span>
         </div>

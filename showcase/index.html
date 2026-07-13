@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CloudForge — Code, forged in your browser</title>
+  <meta name="description" content="CloudForge is a browser-based code workspace: WebContainer runtime, live preview, AI assistance, and cloud persistence. Zero setup." />
+  <meta property="og:title" content="CloudForge — Code, forged in your browser" />
+  <meta property="og:description" content="A full development environment that lives in a tab. npm runs in-browser. AI works at the anvil beside you." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='%23e8632c'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,0..100,0..1;1,9..144,400..600,0..100,0..1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/hero.css" />
+  <link rel="stylesheet" href="css/workspace.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <div class="cursor-ring" aria-hidden="true"></div>
+
+  <nav class="nav" aria-label="Main">
+    <a class="nav-mark" href="#top"><span class="spark" aria-hidden="true"></span>CloudForge</a>
+    <div class="nav-links">
+      <a href="#runtime">Runtime</a>
+      <a href="#features">Features</a>
+      <a href="#assistant">Assistant</a>
+      <a class="btn btn-ghost small" href="#start">Open the Forge</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <canvas id="forge-canvas" aria-hidden="true"></canvas>
+    <div class="wrap hero-inner">
+      <p class="hero-eyebrow"><span class="dot" aria-hidden="true"></span>runtime online — webcontainer v1.6</p>
+      <h1>
+        <span data-split>Code,</span>
+        <span class="molten ch-block" style="--d: 340ms">forged</span><br />
+        <span data-split>in your browser.</span>
+      </h1>
+      <p class="hero-sub">
+        A full development environment that lives in a tab.
+        <em>npm runs in-browser</em>, preview updates as you type, and an AI
+        assistant works at the anvil beside you. Nothing to install. Ever.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-ember" href="#start">Start building — free</a>
+        <a class="btn btn-ghost" href="#runtime">Watch it run ↓</a>
+      </div>
+      <dl class="hero-meta">
+        <div><dt><strong>0<span class="u">ms</span></strong></dt><dd>environment setup</dd></div>
+        <div><dt><strong>6</strong></dt><dd>framework templates</dd></div>
+        <div><dt><strong>1</strong></dt><dd>tab. that's the whole stack</dd></div>
+      </dl>
+    </div>
+    <p class="scroll-hint" aria-hidden="true">scroll</p>
+  </header>
+
+  <main>
+    <section class="workspace-section wrap" id="runtime" aria-label="Workspace demo">
+      <div class="workspace-head">
+        <div>
+          <p class="eyebrow reveal">the runtime</p>
+          <h2 class="reveal" style="--d: 80ms">Everything a machine does, a tab does now.</h2>
+        </div>
+        <p class="reveal" style="--d: 160ms">File tree, editor, terminal, live preview, AI — one surface. The dev
+          server below is running inside the page you're reading.</p>
+      </div>
+
+      <div class="workspace reveal" style="--d: 220ms" role="img" aria-label="CloudForge workspace: file explorer, code editor, live preview, AI panel and terminal">
+        <div class="ws-bar">
+          <div class="ws-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          <span class="ws-url">app.cloudforge.dev/workspace</span>
+          <span></span>
+        </div>
+        <div class="ws-grid">
+          <aside class="ws-tree" aria-hidden="true">
+            <p class="t-label">Explorer</p>
+            <p class="t-item">src/</p>
+            <p class="t-item nest active">App.tsx</p>
+            <p class="t-item nest">Button.tsx</p>
+            <p class="t-item nest">styles.css</p>
+            <p class="t-item">package.json</p>
+            <p class="t-item">vite.config.ts</p>
+          </aside>
+          <div class="ws-editor" aria-hidden="true">
+            <span class="ws-tab">App.tsx</span>
+            <div class="ws-code"><span class="ln">1</span><span class="k">import</span> { useState } <span class="k">from</span> <span class="s">'react'</span>;
+<span class="ln">2</span>
+<span class="ln">3</span><span class="k">export default function</span> <span class="f">App</span>() {
+<span class="ln">4</span>  <span class="k">const</span> [heat, setHeat] = <span class="f">useState</span>(0);
+<span class="ln">5</span>
+<span class="ln">6</span>  <span class="k">return</span> (
+<span class="ln">7</span>    &lt;main className=<span class="s">"forge"</span>&gt;
+<span class="ln">8</span>      &lt;h1&gt;CloudForge&lt;/h1&gt;
+<span class="ln">9</span>      &lt;Button onClick={() =&gt; <span class="f">setHeat</span>(heat + 1)}&gt;
+<span class="ln">10</span>        Heat: {heat}<span class="caret"></span>
+<span class="ln">11</span>      &lt;/Button&gt;
+<span class="ln">12</span>    &lt;/main&gt;
+<span class="ln">13</span>  );
+<span class="ln">14</span>} <span class="c">// saved · preview updated</span></div>
+          </div>
+          <aside class="ws-side" aria-hidden="true">
+            <div class="ws-panel">
+              <p class="p-label">Live preview</p>
+              <div class="p-preview">
+                <p class="pv-title">CloudForge</p>
+                <p class="pv-sub">edits render on save</p>
+                <span class="pv-btn">Heat: 1</span>
+              </div>
+            </div>
+            <div class="ws-panel">
+              <p class="p-label">AI assistant</p>
+              <div class="p-ai">
+                <p class="who">forge · ai</p>
+                <p>Counter state looks good — want me to add a keyboard handler and an aria-label?</p>
+              </div>
+            </div>
+          </aside>
+          <div class="ws-term">
+            <div id="term-lines" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features wrap" id="features" aria-label="Features">
+      <p class="eyebrow reveal">what's in the fire</p>
+      <article class="feat-row reveal">
+        <span class="feat-num">01</span>
+        <h3 class="feat-title">WebContainer runtime<span class="tag">wasm</span></h3>
+        <p class="feat-body">A real Node.js environment, compiled to WebAssembly, booted per project in
+          milliseconds. npm install, dev servers, build scripts — all sandboxed in the tab.</p>
+      </article>
+      <article class="feat-row reveal" style="--d: 60ms">
+        <span class="feat-num">02</span>
+        <h3 class="feat-title">Live preview</h3>
+        <p class="feat-body">The preview pane is your dev server, not a screenshot. Save a file and watch
+          hot-module replacement land before your hand leaves the keyboard.</p>
+      </article>
+      <article class="feat-row reveal" style="--d: 120ms">
+        <span class="feat-num">03</span>
+        <h3 class="feat-title">AI at the anvil<span class="tag">llm</span></h3>
+        <p class="feat-body">Inline suggestions in the editor, a chat panel that reads your file tree,
+          and one-keystroke accept. It reviews, refactors, and explains — in context.</p>
+      </article>
+      <article class="feat-row reveal" style="--d: 180ms">
+        <span class="feat-num">04</span>
+        <h3 class="feat-title">Cloud persistence</h3>
+        <p class="feat-body">Projects are saved as you work and rehydrate on any machine. Close the tab
+          mid-thought; the forge stays warm.</p>
+      </article>
+    </section>
+
+    <section class="marquee-band" aria-label="Framework templates">
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-inner">
+          <span class="name">React</span><span class="sep">✦</span>
+          <span class="name">Next.js</span><span class="sep">✦</span>
+          <span class="name">Vue</span><span class="sep">✦</span>
+          <span class="name">Express</span><span class="sep">✦</span>
+          <span class="name">Hono</span><span class="sep">✦</span>
+          <span class="name">Angular</span><span class="sep">✦</span>
+        </div>
+        <div class="marquee-inner">
+          <span class="name">React</span><span class="sep">✦</span>
+          <span class="name">Next.js</span><span class="sep">✦</span>
+          <span class="name">Vue</span><span class="sep">✦</span>
+          <span class="name">Express</span><span class="sep">✦</span>
+          <span class="name">Hono</span><span class="sep">✦</span>
+          <span class="name">Angular</span><span class="sep">✦</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="ai-section wrap" id="assistant" aria-label="AI assistant">
+      <div class="ai-copy">
+        <p class="eyebrow reveal">the assistant</p>
+        <h2 class="reveal" style="--d: 80ms">It read the file before you asked.</h2>
+        <p class="reveal" style="--d: 140ms">The assistant sees your open buffer, your file tree, and your terminal
+          output. Answers arrive shaped like your codebase — not like a forum post.</p>
+        <ul class="points">
+          <li class="reveal" style="--d: 200ms">Inline completions with one-keystroke accept</li>
+          <li class="reveal" style="--d: 260ms">Whole-file refactors with reviewable diffs</li>
+          <li class="reveal" style="--d: 320ms">Terminal-error explanations, in place</li>
+        </ul>
+      </div>
+      <div class="ai-chat reveal" style="--d: 200ms" role="img" aria-label="Example AI conversation about fixing a stale closure bug">
+        <div class="bubble user">Why does my counter skip numbers when I click fast?</div>
+        <div class="bubble bot"><span class="who">forge · ai</span>
+          Stale closure — each render captures the old <code>heat</code>. Use the functional
+          form: <code>setHeat(h =&gt; h + 1)</code>. Want me to apply it to App.tsx?</div>
+        <div class="bubble user">Yes, and add a test.</div>
+        <div class="bubble bot"><span class="who">forge · ai</span>
+          Done. <code>App.tsx</code> updated, <code>App.test.tsx</code> added — 2 assertions,
+          both passing in the runtime.</div>
+      </div>
+    </section>
+
+    <section class="finale wrap" id="start" aria-label="Get started">
+      <h2 class="reveal">Strike while it's hot.</h2>
+      <p class="reveal" style="--d: 100ms">Pick a template, and be running code before this sentence finishes.</p>
+      <div class="hero-cta reveal" style="--d: 180ms">
+        <a class="btn btn-ember" href="https://github.com/tejasdeshmane/cloudforge" rel="noopener">Start building — free</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer wrap">
+    <span>© 2026 CloudForge — forged with Fable</span>
+    <div class="links">
+      <a href="#runtime">Runtime</a>
+      <a href="#features">Features</a>
+      <a href="#assistant">Assistant</a>
+    </div>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
