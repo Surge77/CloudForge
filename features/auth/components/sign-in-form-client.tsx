@@ -23,24 +23,24 @@ await signIn("github", { redirectTo: "/dashboard" })
 
 const SignInFormClient = () => {
   return (
-    <Card className="forge-panel-strong w-full max-w-md overflow-hidden rounded-lg">
-      <CardHeader className="items-center space-y-4 border-b border-border/70 px-8 py-8 text-center">
-        <Image src="/logo.svg" alt="CloudForge logo" width={58} height={58} />
+    <Card className="relative w-full max-w-sm border-0 bg-transparent shadow-none">
+      <CardHeader className="items-center space-y-5 px-0 pb-8 text-center">
+        <Image src="/logo.svg" alt="CloudForge logo" width={60} height={60} className="rounded-2xl shadow-[0_10px_40px_-12px_rgba(255,90,31,0.5)]" />
         <div className="space-y-2">
-        <CardTitle className="font-code text-2xl font-semibold tracking-tight">
-          Welcome to CloudForge
+        <CardTitle className="font-display text-3xl font-medium tracking-tight">
+          Welcome to <span className="forge-molten">CloudForge</span>
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-[0.95rem]">
           Sign in to continue to your browser IDE.
         </CardDescription>
         </div>
-        <div className="flex items-center gap-2 rounded-md border border-border/70 bg-background/70 px-3 py-2 font-code text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3.5 py-2 font-code text-xs text-muted-foreground backdrop-blur">
           <Terminal className="h-3.5 w-3.5 text-primary" />
           <span>&gt; authenticate workspace</span>
         </div>
       </CardHeader>
 
-      <CardContent className="grid gap-3 px-8 py-7">
+      <CardContent className="grid gap-3 px-0">
         <form action={handleGoogleSignIn}>
           <Button type="submit" variant={"outline"} className="h-11 w-full bg-background/80 hover:border-primary/60 hover:bg-primary/10">
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

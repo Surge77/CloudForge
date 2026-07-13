@@ -158,27 +158,30 @@ export default function ProjectTable({
 
   return (
     <>
-      <div className="forge-panel w-full overflow-hidden rounded-lg">
+      <div className="forge-panel w-full overflow-hidden rounded-2xl">
         <Table>
           <TableHeader>
-            <TableRow className="border-border/70 bg-muted/30">
-              <TableHead>Project</TableHead>
-              <TableHead>Template</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>User</TableHead>
-              <TableHead className="w-[50px]">Actions</TableHead>
+            <TableRow className="border-border/60 hover:bg-transparent">
+              <TableHead className="font-code text-[0.7rem] uppercase tracking-[0.14em] text-muted-foreground">Project</TableHead>
+              <TableHead className="font-code text-[0.7rem] uppercase tracking-[0.14em] text-muted-foreground">Template</TableHead>
+              <TableHead className="font-code text-[0.7rem] uppercase tracking-[0.14em] text-muted-foreground">Created</TableHead>
+              <TableHead className="font-code text-[0.7rem] uppercase tracking-[0.14em] text-muted-foreground">User</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {projects.map((project) => (
-              <TableRow key={project.id} className="border-border/70 hover:bg-primary/5">
-                <TableCell className="font-medium">
+              <TableRow
+                key={project.id}
+                className="group border-border/50 transition-colors hover:bg-[linear-gradient(90deg,rgba(255,90,31,0.08),transparent_60%)]"
+              >
+                <TableCell className="py-4 font-medium">
                   <div className="flex flex-col">
                     <Link
                       href={`/playground/${project.id}`}
-                      className="transition-colors hover:text-primary"
+                      className="font-display text-lg font-medium tracking-tight transition-colors group-hover:text-primary"
                     >
-                      <span className="font-semibold">{project.title}</span>
+                      {project.title}
                     </Link>
                     <span className="line-clamp-1 text-sm text-muted-foreground">
                       {project.description}

@@ -1,0 +1,166 @@
+/* ── hero · molten shader + ignited headline ────────────────── */
+
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex; flex-direction: column; justify-content: center;
+  padding-top: 7rem;
+  overflow: hidden;
+}
+
+#forge-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+}
+
+/* legibility scrim over the shader */
+.hero::after {
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background:
+    radial-gradient(120% 90% at 50% 110%, transparent 30%, rgba(11, 8, 6, 0.55) 70%),
+    linear-gradient(180deg, rgba(11, 8, 6, 0.55) 0%, rgba(11, 8, 6, 0.1) 40%, rgba(11, 8, 6, 0.92) 100%);
+  pointer-events: none;
+}
+
+.hero-inner { position: relative; z-index: 2; }
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  border: 1px solid var(--line);
+  background: rgba(20, 16, 12, 0.55);
+  backdrop-filter: blur(8px);
+  padding: 0.5rem 1rem;
+  border-radius: var(--r-full);
+  margin-bottom: var(--sp-4);
+}
+.hero-eyebrow .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 10px 2px rgba(143, 191, 127, 0.5);
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: var(--fs-hero);
+  font-weight: 470;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  max-width: 12ch;
+  font-variation-settings: "opsz" 144, "SOFT" 40, "WONK" 0;
+}
+.hero h1 .molten {
+  font-style: italic;
+  font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+  background: linear-gradient(100deg, var(--gold) 0%, var(--ember-hot) 45%, var(--ember-deep) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* char-ignite reveal — chars rise + heat-fade from ember to text color */
+.hero h1 .ch {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.42em) rotate(3deg);
+  filter: blur(6px);
+  color: var(--ember-hot);
+}
+.hero.lit h1 .ch {
+  animation: ignite 0.9s var(--ease-forge) forwards;
+  animation-delay: var(--d);
+}
+@keyframes ignite {
+  0% { opacity: 0; transform: translateY(0.42em) rotate(3deg); filter: blur(6px); color: var(--ember-hot); }
+  55% { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: none; filter: blur(0); color: currentColor; }
+}
+
+/* gradient word rises as one block — per-char transforms break background-clip */
+.hero h1 .ch-block {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.42em);
+  filter: blur(8px);
+}
+.hero.lit h1 .ch-block {
+  animation: ignite-block 1s var(--ease-forge) forwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes ignite-block {
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+
+.hero-sub {
+  margin-top: var(--sp-3);
+  max-width: 34rem;
+  font-size: var(--fs-lg);
+  line-height: 1.55;
+  color: var(--text-2);
+  font-weight: 400;
+}
+.hero-sub em {
+  font-style: normal;
+  color: var(--text);
+}
+
+.hero-cta { margin-top: var(--sp-6); display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
+.hero-meta {
+  margin-top: var(--sp-8);
+  display: flex; gap: var(--sp-6); flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+}
+.hero-meta strong {
+  display: block;
+  font-size: var(--fs-xl);
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.hero-meta strong .u { color: var(--ember); }
+
+/* scroll hint */
+.scroll-hint {
+  position: absolute; bottom: 1.6rem; right: var(--gutter);
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+}
+.scroll-hint::after {
+  content: ""; width: 1px; height: 42px;
+  background: linear-gradient(var(--ember), transparent);
+  animation: drip 2.2s var(--ease-forge) infinite;
+}
+@keyframes drip {
+  0% { transform: scaleY(0); transform-origin: top; }
+  55% { transform: scaleY(1); transform-origin: top; }
+  56% { transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+@media (max-width: 720px) {
+  .hero { padding-top: 6rem; }
+  .hero-meta { gap: var(--sp-4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero h1 .ch, .hero h1 .ch-block {
+    opacity: 1; transform: none; filter: none;
+    animation: none !important;
+  }
+}

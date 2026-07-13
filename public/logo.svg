@@ -1,9 +1,30 @@
-<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="240" height="240" rx="48" fill="#0B0B0C"/>
-  <rect x="16" y="16" width="208" height="208" rx="36" fill="#111113" stroke="#FF5A1F" stroke-opacity="0.35" stroke-width="2"/>
-  <path d="M79 68L38 120L79 172H105L65 120L105 68H79Z" fill="#FF5A1F"/>
-  <path d="M161 68L202 120L161 172H135L175 120L135 68H161Z" fill="#FF5A1F"/>
-  <path d="M115 76H145L127 164H97L115 76Z" fill="#FFB020"/>
-  <path d="M68 120H92" stroke="#FFD6C0" stroke-width="10" stroke-linecap="round"/>
-  <path d="M148 120H172" stroke="#FFD6C0" stroke-width="10" stroke-linecap="round"/>
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cf-molten" x1="128" y1="40" x2="128" y2="212" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFCF7A"/>
+      <stop offset="0.42" stop-color="#FF7A3D"/>
+      <stop offset="1" stop-color="#A53C14"/>
+    </linearGradient>
+    <linearGradient id="cf-tile" x1="24" y1="24" x2="232" y2="232" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1C1611"/>
+      <stop offset="1" stop-color="#0B0806"/>
+    </linearGradient>
+    <radialGradient id="cf-heat" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 176) rotate(-90) scale(96)">
+      <stop stop-color="#FF7A3D" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#FF7A3D" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#cf-tile)"/>
+  <rect x="9" y="9" width="238" height="238" rx="55" stroke="#FF7A3D" stroke-opacity="0.28" stroke-width="2"/>
+  <ellipse cx="128" cy="180" rx="78" ry="52" fill="url(#cf-heat)"/>
+
+  <!-- forge flame / molten spark -->
+  <path d="M128 44C136 78 165 92 165 132C165 160 149 180 128 180C107 180 91 160 91 132C91 108 108 100 112 78C126 92 121 112 128 120C133 108 128 74 128 44Z" fill="url(#cf-molten)"/>
+  <path d="M128 92C133 112 146 120 146 140C146 154 138 165 128 165C118 165 110 154 110 140C110 128 118 124 121 112C129 122 125 130 128 134C131 126 128 104 128 92Z" fill="#0B0806" fill-opacity="0.55"/>
+
+  <!-- code caret, forged into the base -->
+  <path d="M96 196L82 208L96 220" stroke="#FFCF7A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M160 196L174 208L160 220" stroke="#FFCF7A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M138 192L118 224" stroke="#FF7A3D" stroke-width="9" stroke-linecap="round"/>
 </svg>
